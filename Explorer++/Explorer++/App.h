@@ -74,7 +74,7 @@ private:
 	void LoadSettings(std::vector<WindowStorageData> &windows);
 	void SaveSettings();
 	void OnConfigLoaded();
-	void SetUpLanguageResourceInstance();
+	void SetUpResources();
 	void SetUpAppServices();
 	void InitializePlugins();
 	bool IsModelessDialogMessage(MSG *msg);

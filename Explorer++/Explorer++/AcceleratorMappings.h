@@ -56,6 +56,7 @@ const std::unordered_map<std::wstring, int> ACCELERATOR_MAPPINGS = {
 	{ L"wildcard_deselect", IDM_EDIT_WILDCARDDESELECT },
 	{ L"wildcard_select", IDM_EDIT_WILDCARDSELECTION },
 
+	{ L"toggle_dual_pane", IDM_VIEW_DUAL_PANE },
 	{ L"toggle_status_bar", IDM_VIEW_STATUSBAR },
 	{ L"toggle_folders", IDM_VIEW_FOLDERS },
 	{ L"toggle_display_window", IDM_VIEW_DISPLAYWINDOW },

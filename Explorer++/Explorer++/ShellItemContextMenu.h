@@ -18,6 +18,11 @@ class ResourceLoader;
 class ShellItemContextMenu : public ShellContextMenu
 {
 public:
+	enum class Item
+	{
+		OpenInOtherPane
+	};
+
 	using MaybeHandleShellMenuItemCallback = std::function<bool(const PidlAbsolute &directory,
 		const std::vector<PidlChild> &items, const std::wstring &verb)>;
 

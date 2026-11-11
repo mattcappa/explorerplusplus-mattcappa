@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "SplitPaneState.h"
 #include "TabBar.h"
 #include "TabBarBacking.h"
 
@@ -20,6 +21,7 @@ public:
 		ShellBrowserFactory *shellBrowserFactory, AppServices *appServices);
 
 	TabBar *GetTabBar();
+	SplitPaneState &GetSplitPaneState();
 
 private:
 	TabBar m_tabBar;

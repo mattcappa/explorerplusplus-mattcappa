@@ -4,18 +4,7 @@
 
 #include "stdafx.h"
 #include "ResourceHelper.h"
-#include <glog/logging.h>
-#include <wil/common.h>
 #include <cstring>
-
-namespace
-{
-
-// As per the documentation for the DLGTEMPLATEEX struct, this signature indicates that a dialog
-// template is an extended template.
-const WORD DIALOG_BOX_EXTENDED_SIGNATURE = 0xFFFF;
-
-}
 
 // Note that the type parameter isn't necessarily a string. For example, it may be set to RT_DIALOG,
 // which is simply an integer with a cast. So, it's not valid to change that parameter to a const
@@ -56,34 +45,4 @@ std::optional<std::vector<std::byte>> CopyResource(HINSTANCE resourceInstance, U
 	std::memcpy(copiedData.data(), resourceData, resourceSize);
 
 	return copiedData;
-}
-
-UniqueVariableSizeStruct<DLGTEMPLATEEX> MakeRTLDialogTemplate(HINSTANCE resourceInstance,
-	UINT dialogId)
-{
-	auto resourceData = CopyResource(resourceInstance, dialogId, RT_DIALOG);
-
-	if (!resourceData)
-	{
-		return nullptr;
-	}
-
-	// The resource size should always be greater than the base size of the struct, since
-	// additional, variable-length data will always be included. If this isn't the case, something
-	// has gone wrong and it's not safe to access the base members of the struct.
-	CHECK_GT(resourceData->size(), sizeof(DLGTEMPLATEEX));
-
-	// The only reason this struct is allocated and the data is copied into it is to make it
-	// possible to return typed data, rather than an untyped set of bytes.
-	auto dialogTemplateEx = MakeUniqueVariableSizeStruct<DLGTEMPLATEEX>(resourceData->size());
-
-	std::memcpy(dialogTemplateEx.get(), resourceData->data(), resourceData->size());
-
-	// All dialog resources are currently of the type DIALOGEX. Therefore, the signature here should
-	// always indicate that this dialog is an extended dialog box template.
-	CHECK_EQ(dialogTemplateEx->signature, DIALOG_BOX_EXTENDED_SIGNATURE);
-
-	WI_SetFlag(dialogTemplateEx->exStyle, WS_EX_LAYOUTRTL);
-
-	return dialogTemplateEx;
 }

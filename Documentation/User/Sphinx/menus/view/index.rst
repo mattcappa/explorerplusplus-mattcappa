@@ -5,6 +5,7 @@ View
    :titlesonly:
    :caption: Contents
 
+   dual_pane
    status_bar
    folders
    display_window

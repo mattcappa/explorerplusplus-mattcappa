@@ -138,6 +138,7 @@ public:
 	int GetNumSelectedFiles() const;
 	int GetNumSelectedFolders() const;
 	int GetNumSelected() const;
+	void SetKeepHorizontalScrollBarVisible(bool keepVisible);
 
 	/* Item information. */
 	WIN32_FIND_DATA GetItemFileFindData(int index) const;
@@ -177,6 +178,12 @@ protected:
 	const NavigationManager *GetNavigationManager() const override;
 
 private:
+	void QueueHorizontalScrollBarUpdate();
+	void UpdateHorizontalScrollBar();
+	bool m_keepHorizontalScrollBarVisible = false;
+	bool m_updatingHorizontalScrollBar = false;
+	bool m_horizontalScrollBarUpdateQueued = false;
+
 	struct ItemInfo_t
 	{
 		PidlAbsolute pidlComplete;
@@ -357,6 +364,7 @@ private:
 	static const UINT WM_APP_COLUMN_RESULT_READY = WM_APP + 150;
 	static const UINT WM_APP_THUMBNAIL_RESULT_READY = WM_APP + 151;
 	static const UINT WM_APP_INFO_TIP_READY = WM_APP + 152;
+	static const UINT WM_APP_UPDATE_HORIZONTAL_SCROLL_BAR = WM_APP + 153;
 
 	ShellBrowserImpl(const FolderSettings &folderSettings, const FolderColumns *initialColumns,
 		BrowserWindow *browser, AppServices *appServices, HINSTANCE resourceInstance,

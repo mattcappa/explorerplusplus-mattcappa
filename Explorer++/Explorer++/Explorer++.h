@@ -204,6 +204,7 @@ private:
 	void MaybeUpdateTabBarVisibility();
 	void OnTabCreated(const Tab &tab);
 	void OnTabSelected(const Tab &tab);
+	void ToggleSplitPane();
 	void ShowTabBar();
 	void HideTabBar();
 	void CreateInitialTabs(const WindowStorageData &storageData);

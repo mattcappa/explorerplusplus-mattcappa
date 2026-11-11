@@ -8,10 +8,12 @@
 #include "OneShotTimer.h"
 #include "OneShotTimerManager.h"
 #include "ShellBrowser/FolderSettings.h"
+#include "SplitPaneState.h"
 #include "Tab.h"
 #include "TabView.h"
 #include "TabViewDelegate.h"
 #include "../Helper/ShellDropTargetWindow.h"
+#include "../Helper/SignalWrapper.h"
 #include <functional>
 #include <optional>
 #include <unordered_map>
@@ -75,6 +77,10 @@ public:
 	int GetNumTabs() const;
 	int MoveTab(const Tab &tab, int newIndex);
 	Tab &DuplicateTab(const Tab &tab);
+	void ShowTabInOtherPane(const Tab &tab);
+	SplitPaneState &GetSplitPaneState();
+
+	SignalWrapper<TabBar, void()> splitPaneChangedSignal;
 
 	// Unlike CloseTab(), which will only close tabs that aren't locked, this will close all tabs,
 	// regardless of the lock state of any individual tab. This is needed when the parent window is
@@ -155,6 +161,7 @@ private:
 
 	std::vector<int> m_tabSelectionHistory;
 	int m_iPreviousTabSelectionId;
+	SplitPaneState m_splitPaneState;
 
 	// Drop handling
 	std::optional<DropTargetContext> m_dropTargetContext;

@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "Explorer++.h"
+#include "BrowserPaneView.h"
 #include "ColumnStorage.h"
 #include "Config.h"
 #include "ShellBrowser/NavigateParams.h"
@@ -24,6 +25,14 @@ void Explorerplusplus::InitializeTabs()
 
 	m_connections.push_back(m_browserPane->GetTabBar()->GetView()->sizeUpdatedSignal.AddObserver(
 		[this] { UpdateLayout(); }));
+	m_connections.push_back(
+		m_browserPane->GetTabBar()->splitPaneChangedSignal.AddObserver([this] { UpdateLayout(); }));
+	m_view.GetBrowserPaneView()->GetDividerView()->SetResizedCallback(
+		[this](double fraction)
+		{
+			GetActivePane()->GetSplitPaneState().SetSplitFraction(fraction);
+			UpdateLayout();
+		});
 
 	m_connections.push_back(m_config->alwaysShowTabBar.addObserver(
 		std::bind(&Explorerplusplus::MaybeUpdateTabBarVisibility, this)));
@@ -187,17 +196,46 @@ void Explorerplusplus::CreateTabsFromStorageData(const WindowStorageData &storag
 
 void Explorerplusplus::OnTabSelected(const Tab &tab)
 {
-	/* Hide the old listview. */
-	ShowWindow(m_hActiveListView, SW_HIDE);
-
 	m_hActiveListView = tab.GetShellBrowserImpl()->GetListView();
 	m_pActiveShellBrowser = tab.GetShellBrowserImpl();
 
 	UpdateWindowStates(tab);
 
-	/* Show the new listview. */
-	ShowWindow(m_hActiveListView, SW_SHOW);
+	UpdateLayout();
 	SetFocus(m_hActiveListView);
+}
+
+void Explorerplusplus::ToggleSplitPane()
+{
+	auto *tabBar = GetActivePane()->GetTabBar();
+	auto &splitState = GetActivePane()->GetSplitPaneState();
+
+	if (splitState.IsEnabled())
+	{
+		splitState.Disable();
+	}
+	else
+	{
+		const auto &selectedTab = tabBar->GetSelectedTab();
+		Tab *otherTab;
+
+		if (tabBar->GetNumTabs() > 1)
+		{
+			int index = (tabBar->GetSelectedTabIndex() + 1) % tabBar->GetNumTabs();
+			otherTab = &tabBar->GetTabByIndex(index);
+		}
+		else
+		{
+			auto navigateParams =
+				NavigateParams::Normal(selectedTab.GetShellBrowser()->GetDirectory().Raw());
+			otherTab = &tabBar->CreateNewTab(navigateParams, { .selected = false });
+		}
+
+		splitState.Enable(otherTab->GetId());
+	}
+
+	UpdateLayout();
+	FocusActiveTab();
 }
 
 void Explorerplusplus::ShowTabBar()

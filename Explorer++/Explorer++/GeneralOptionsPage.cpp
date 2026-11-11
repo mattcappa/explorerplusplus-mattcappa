@@ -7,17 +7,14 @@
 #include "AppController.h"
 #include "AppInfo.h"
 #include "Config.h"
-#include "LanguageHelper.h"
 #include "MainResource.h"
 #include "ResourceLoader.h"
 #include "../Helper/DpiCompatibility.h"
 #include "../Helper/Helper.h"
-#include "../Helper/ProcessHelper.h"
 #include "../Helper/ResizableDialogHelper.h"
 #include "../Helper/WindowHelper.h"
 #include <fmt/format.h>
 #include <fmt/xchar.h>
-#include <Shlwapi.h>
 
 using namespace DefaultFileManager;
 
@@ -57,12 +54,6 @@ std::unique_ptr<ResizableDialogHelper> GeneralOptionsPage::InitializeResizeDialo
 		SizingType::Horizontal);
 	controls.emplace_back(GetDlgItem(GetDialog(), IDC_DEFAULT_NEWTABDIR_BUTTON),
 		MovingType::Horizontal, SizingType::None);
-	controls.emplace_back(GetDlgItem(GetDialog(), IDC_OPTIONS_LANGUAGE), MovingType::None,
-		SizingType::Horizontal);
-	controls.emplace_back(GetDlgItem(GetDialog(), IDC_STATIC_RESTART_FOOTNOTE),
-		MovingType::Horizontal, SizingType::None);
-	controls.emplace_back(GetDlgItem(GetDialog(), IDC_STATIC_RESTART_NOTICE), MovingType::None,
-		SizingType::Horizontal);
 	return std::make_unique<ResizableDialogHelper>(GetDialog(), controls);
 }
 
@@ -84,8 +75,6 @@ void GeneralOptionsPage::InitializeControls()
 
 	HWND hEdit = GetDlgItem(GetDialog(), IDC_DEFAULT_NEWTABDIR_EDIT);
 	SetNewTabDirectory(hEdit, m_config->defaultTabDirectory.c_str());
-
-	AddLanguages();
 }
 
 void GeneralOptionsPage::SetNewTabDirectory(HWND hEdit, const TCHAR *szPath)
@@ -120,94 +109,6 @@ void GeneralOptionsPage::SetNewTabDirectory(HWND hEdit, PCIDLIST_ABSOLUTE pidl)
 	GetDisplayName(pidl, nameFlags, newTabDir);
 
 	SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM) newTabDir.c_str());
-}
-
-void GeneralOptionsPage::AddLanguages()
-{
-	HWND hLanguageComboBox;
-	WIN32_FIND_DATA wfd;
-	HANDLE hFindFile;
-	TCHAR szNamePattern[MAX_PATH];
-	WORD wLanguage;
-	int iIndex = 1;
-	int iSel = 0;
-
-	hLanguageComboBox = GetDlgItem(GetDialog(), IDC_OPTIONS_LANGUAGE);
-
-	/* English will always be added to the combox, and will
-	always be the first item. */
-	SendMessage(hLanguageComboBox, CB_ADDSTRING, 0, (LPARAM) _T("English"));
-
-	auto processPath = GetCurrentProcessPath();
-
-	TCHAR szImageDirectory[MAX_PATH];
-	StringCchCopy(szImageDirectory, std::size(szImageDirectory), processPath.c_str());
-	PathRemoveFileSpec(szImageDirectory);
-	StringCchCopy(szNamePattern, std::size(szNamePattern), szImageDirectory);
-	PathAppend(szNamePattern, L"Explorer++*.dll");
-
-	hFindFile = FindFirstFile(szNamePattern, &wfd);
-
-	/* Enumerate all the possible language DLL's. */
-	if (hFindFile != INVALID_HANDLE_VALUE)
-	{
-		do
-		{
-			BOOL bRet = AddLanguageToComboBox(hLanguageComboBox, szImageDirectory, wfd.cFileName,
-				&wLanguage);
-
-			if (bRet)
-			{
-				if (wLanguage == m_config->language)
-				{
-					iSel = iIndex;
-				}
-
-				iIndex++;
-			}
-		} while (FindNextFile(hFindFile, &wfd));
-
-		FindClose(hFindFile);
-	}
-
-	/* Now, select the current language. */
-	SendMessage(hLanguageComboBox, CB_SETCURSEL, iSel, 0);
-}
-
-BOOL GeneralOptionsPage::AddLanguageToComboBox(HWND hComboBox, const TCHAR *szImageDirectory,
-	const TCHAR *szFileName, WORD *pdwLanguage)
-{
-	TCHAR szFullFileName[MAX_PATH];
-	StringCchCopy(szFullFileName, std::size(szFullFileName), szImageDirectory);
-	PathAppend(szFullFileName, szFileName);
-
-	BOOL bSuccess = FALSE;
-	WORD wLanguage;
-	BOOL bRet = GetFileLanguage(szFullFileName, &wLanguage);
-
-	if (bRet)
-	{
-		TCHAR szLanguageName[32];
-
-		int iRet = GetLocaleInfo(wLanguage, LOCALE_SNATIVELANGNAME, szLanguageName,
-			std::size(szLanguageName));
-
-		if (iRet != 0)
-		{
-			int iIndex = (int) SendMessage(hComboBox, CB_ADDSTRING, 0, (LPARAM) szLanguageName);
-
-			if (iIndex != CB_ERR)
-			{
-				/* Associate the language identifier with the item. */
-				SendMessage(hComboBox, CB_SETITEMDATA, iIndex, wLanguage);
-
-				*pdwLanguage = wLanguage;
-				bSuccess = TRUE;
-			}
-		}
-	}
-
-	return bSuccess;
 }
 
 void GeneralOptionsPage::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -345,20 +246,6 @@ void GeneralOptionsPage::SaveSettings()
 	else
 	{
 		m_config->defaultTabDirectory = newTabDir;
-	}
-
-	HWND comboBox = GetDlgItem(GetDialog(), IDC_OPTIONS_LANGUAGE);
-	auto selectedIndex = static_cast<int>(SendMessage(comboBox, CB_GETCURSEL, 0, 0));
-
-	if (selectedIndex == 0)
-	{
-		// The first item is always the default language.
-		m_config->language = LanguageHelper::DEFAULT_LANGUAGE;
-	}
-	else
-	{
-		auto language = static_cast<WORD>(SendMessage(comboBox, CB_GETITEMDATA, selectedIndex, 0));
-		m_config->language = language;
 	}
 }
 

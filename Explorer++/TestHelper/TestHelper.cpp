@@ -31,27 +31,6 @@ TEST(GetFileProductVersion, French)
 	TestGetFileProductVersion(L"Explorer++FR.dll", 327684, 9);
 }
 
-void TestGetFileLanguage(const TCHAR *szFile, WORD wExpectedLanguage)
-{
-	TCHAR szDLL[MAX_PATH];
-	GetTestResourceFilePath(szFile, szDLL, SIZEOF_ARRAY(szDLL));
-
-	WORD wLanguage;
-	BOOL bRet = GetFileLanguage(szDLL, &wLanguage);
-	ASSERT_EQ(TRUE, bRet);
-	EXPECT_EQ(wExpectedLanguage, wLanguage);
-}
-
-TEST(GetFileLanguage, Catalan)
-{
-	TestGetFileLanguage(L"Explorer++CA.dll", LANG_CATALAN);
-}
-
-TEST(GetFileLanguage, French)
-{
-	TestGetFileLanguage(L"Explorer++FR.dll", LANG_FRENCH);
-}
-
 void TestVersionInfoString(TCHAR *szDLL, const TCHAR *szVersionInfo, const TCHAR *szExpectedValue)
 {
 	/* Somewhat flaky, as it relies

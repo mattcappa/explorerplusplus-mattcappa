@@ -90,6 +90,18 @@ void ShellItemContextMenu::MaybeAddOpenInNewTabItem(const ResourceLoader *resour
 			.SetHelpText(resourceLoader->LoadString(IDS_GENERAL_OPEN_IN_NEW_TAB_HELP_TEXT))
 			.SetSelectedCallback([this, pidlComplete] { OnOpenDirectoryInNewTab(pidlComplete); }),
 		openItemIndex ? *openItemIndex + 1 : 0);
+
+	m_rootMenuView->AddItem(
+		MenuItemParams(resourceLoader->LoadString(IDS_GENERAL_OPEN_IN_OTHER_PANE))
+			.SetKey(Item::OpenInOtherPane)
+			.SetHelpText(resourceLoader->LoadString(IDS_GENERAL_OPEN_IN_OTHER_PANE_HELP_TEXT))
+			.SetSelectedCallback(
+				[this, pidlComplete]
+				{
+					GetTargetBrowser()->OpenItem(pidlComplete.Raw(),
+						OpenFolderDisposition::OtherPane);
+				}),
+		openItemIndex ? *openItemIndex + 2 : 1);
 }
 
 wil::com_ptr_nothrow<IContextMenu> ShellItemContextMenu::MaybeGetShellContextMenu(HWND hwnd) const

@@ -49,6 +49,61 @@ TEST_F(TabBarTest, TabSettingsOnCreation)
 	EXPECT_TRUE(m_tabBar->IsTabSelected(*tab3));
 }
 
+TEST_F(TabBarTest, ShowExistingTabInOtherPane)
+{
+	auto *active = m_browser->AddTab(L"c:\\");
+	auto *other = m_browser->AddTab(L"d:\\");
+	m_tabBar->ShowTabInOtherPane(*other);
+	EXPECT_EQ(m_tabBar->GetNumTabs(), 2);
+	EXPECT_TRUE(m_tabBar->IsTabSelected(*active));
+	EXPECT_TRUE(m_tabBar->GetSplitPaneState().IsEnabled());
+	EXPECT_EQ(m_tabBar->GetSplitPaneState().GetOtherTabId(), other->GetId());
+}
+
+TEST_F(TabBarTest, ShowActiveTabInOtherPaneDuplicatesWithoutChangingSelection)
+{
+	auto *active = m_browser->AddTab(L"c:\\");
+	m_tabBar->ShowTabInOtherPane(*active);
+	ASSERT_EQ(m_tabBar->GetNumTabs(), 2);
+	EXPECT_TRUE(m_tabBar->IsTabSelected(*active));
+	auto &other = m_tabBar->GetTab(*m_tabBar->GetSplitPaneState().GetOtherTabId());
+	EXPECT_NE(other.GetId(), active->GetId());
+	EXPECT_EQ(other.GetShellBrowser()->GetDirectory(), active->GetShellBrowser()->GetDirectory());
+}
+
+TEST_F(TabBarTest, ClosingInactivePaneExitsSplitView)
+{
+	auto *active = m_browser->AddTab(L"c:\\");
+	auto *other = m_browser->AddTab(L"d:\\");
+	m_tabBar->ShowTabInOtherPane(*other);
+	m_tabBar->CloseTab(*other);
+	EXPECT_FALSE(m_tabBar->GetSplitPaneState().IsEnabled());
+	EXPECT_TRUE(m_tabBar->IsTabSelected(*active));
+}
+
+TEST_F(TabBarTest, ClosingHiddenTabKeepsSplitView)
+{
+	m_browser->AddTab(L"c:\\");
+	auto *other = m_browser->AddTab(L"d:\\");
+	auto *hidden = m_browser->AddTab(L"e:\\");
+	m_tabBar->ShowTabInOtherPane(*other);
+	m_tabBar->CloseTab(*hidden);
+	EXPECT_TRUE(m_tabBar->GetSplitPaneState().IsEnabled());
+	EXPECT_EQ(m_tabBar->GetSplitPaneState().GetOtherTabId(), other->GetId());
+}
+
+TEST_F(TabBarTest, OpeningFolderInOtherPaneIgnoresNewTabPreferences)
+{
+	auto *active = m_browser->AddTab(L"c:\\");
+	m_config.alwaysOpenNewTab = true;
+	m_config.openTabsInForeground = true;
+	m_browser->OpenItem(L"d:\\", OpenFolderDisposition::OtherPane);
+	ASSERT_EQ(m_tabBar->GetNumTabs(), 2);
+	EXPECT_TRUE(m_tabBar->IsTabSelected(*active));
+	auto &other = m_tabBar->GetTab(*m_tabBar->GetSplitPaneState().GetOtherTabId());
+	EXPECT_EQ(other.GetShellBrowser()->GetDirectory(), CreateSimplePidlForTest(L"d:\\"));
+}
+
 TEST_F(TabBarTest, OpenNewTabNextToCurrentOptionInitialTab)
 {
 	m_config.openNewTabNextToCurrent = true;

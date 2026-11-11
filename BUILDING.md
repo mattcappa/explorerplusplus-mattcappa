@@ -28,9 +28,11 @@ The relevant packages should then be automatically installed during the first bu
 
 Open `Explorer++\Explorer++.sln`. From within Visual Studio, select `Debug` > `Start Without Debugging` to compile and run the program.
 
-# Translations
+# Building and running from VS Code
 
-Building the program in release mode will also build all of the translations. The resulting DLLs can then be used with Explorer++.
+The Agents window's Run menu provides **Build Explorer++ (Debug x64)** and **Build and Run Explorer++ (Debug x64, no debugger)**. Both use `Scripts\build-debug.ps1`, which discovers MSBuild and checks the vcpkg prerequisites. Build and Run passes `-Run` to the script and launches the application only after a successful build. This deliberately avoids `dependsOn`: Agents combines task dependencies with `&&`, which Windows PowerShell 5.1 does not support.
+
+For breakpoint debugging, install the Microsoft C/C++ extension, open the workspace in the VS Code editor, select **Explorer++ (Debug x64)** in Run and Debug, and press F5. The launch configuration builds the application before starting the debugger. The Agents Run tasks launch without a debugger.
 
 # Tests
 

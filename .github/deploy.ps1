@@ -72,7 +72,6 @@ $fullVersion = Get-FullVersionNumber -BuildNumber $BuildNumber
 $artifactsToDeploy = @(
     'Explorer++.Release.Win32/explorerpp_x86.zip'
     'Explorer++.Release.Win32/explorerpp_x86_setup.msi'
-    'Explorer++.Release.Win32/explorerpp_translations.zip'
     'Explorer++.Release.Win32/explorerpp_x86_symbols.zip'
 
     'Explorer++.Release.x64/explorerpp_x64.zip'

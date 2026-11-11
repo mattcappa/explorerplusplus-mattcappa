@@ -134,9 +134,6 @@
     <ClCompile Include="MainToolbarStorageTest.cpp">
       <Filter>Main Toolbar</Filter>
     </ClCompile>
-    <ClCompile Include="ResourceHelperTest.cpp">
-      <Filter>Helper\Miscellaneous</Filter>
-    </ClCompile>
     <ClCompile Include="ServiceProviderTest.cpp">
       <Filter>Context Menu Support</Filter>
     </ClCompile>
@@ -260,9 +257,6 @@
     </ClCompile>
     <ClCompile Include="ConfigStorageTestHelper.cpp">
       <Filter>Config</Filter>
-    </ClCompile>
-    <ClCompile Include="LanguageHelperTest.cpp">
-      <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="TabRestorerTest.cpp">
       <Filter>Tabs</Filter>
@@ -435,6 +429,18 @@
     </ClCompile>
     <ClCompile Include="TabBarTest.cpp">
       <Filter>Tabs\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="SplitPaneStateTest.cpp">
+      <Filter>Tabs\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="SplitPaneDividerViewTest.cpp">
+      <Filter>Tabs\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ShellItemContextMenuTest.cpp">
+      <Filter>Menus\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ShellBackgroundContextMenuTest.cpp">
+      <Filter>Menus\UI</Filter>
     </ClCompile>
     <ClCompile Include="TabContextMenuTest.cpp">
       <Filter>Tabs\UI</Filter>

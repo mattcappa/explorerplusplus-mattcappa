@@ -80,6 +80,44 @@ TEST_F(TabContextMenuTest, OpenParentInNewTab)
 	EXPECT_EQ(tab2.GetShellBrowser()->GetDirectory(), CreateSimplePidlForTest(L"c:\\windows"));
 }
 
+TEST_F(TabContextMenuTest, OpenBackgroundTabInOtherPane)
+{
+	auto *active = m_browser->AddTab(L"c:\\");
+	auto *other = m_browser->AddTab(L"d:\\");
+	TestMenuView menuView;
+	TabContextMenu menu(&menuView, &m_acceleratorManager, other->GetWeakPtr(), m_tabBar,
+		&m_tabEvents, &m_resourceLoader);
+	RootMenuViewTestApi::SelectItem(&menuView, TabContextMenu::Item::OpenInOtherPane, false, false);
+	EXPECT_EQ(m_tabBar->GetNumTabs(), 2);
+	EXPECT_TRUE(m_tabBar->IsTabSelected(*active));
+	EXPECT_EQ(m_tabBar->GetSplitPaneState().GetOtherTabId(), other->GetId());
+}
+
+TEST_F(TabContextMenuTest, OpenActiveTabInOtherPane)
+{
+	auto *tab = m_browser->AddTab(L"c:\\");
+	TestMenuView menuView;
+	TabContextMenu menu(&menuView, &m_acceleratorManager, tab->GetWeakPtr(), m_tabBar, &m_tabEvents,
+		&m_resourceLoader);
+	RootMenuViewTestApi::SelectItem(&menuView, TabContextMenu::Item::OpenInOtherPane, false, false);
+	EXPECT_EQ(m_tabBar->GetNumTabs(), 2);
+	EXPECT_TRUE(m_tabBar->IsTabSelected(*tab));
+	EXPECT_TRUE(m_tabBar->GetSplitPaneState().IsEnabled());
+}
+
+TEST_F(TabContextMenuTest, OpenInOtherPaneAfterTabClosed)
+{
+	m_browser->AddTab(L"c:\\");
+	auto *other = m_browser->AddTab(L"d:\\");
+	TestMenuView menuView;
+	TabContextMenu menu(&menuView, &m_acceleratorManager, other->GetWeakPtr(), m_tabBar,
+		&m_tabEvents, &m_resourceLoader);
+	m_tabBar->CloseTab(*other);
+	RootMenuViewTestApi::SelectItem(&menuView, TabContextMenu::Item::OpenInOtherPane, false, false);
+	EXPECT_EQ(m_tabBar->GetNumTabs(), 1);
+	EXPECT_FALSE(m_tabBar->GetSplitPaneState().IsEnabled());
+}
+
 TEST_F(TabContextMenuTest, Refresh)
 {
 	auto *tab = m_browser->AddTab(L"c:\\");

@@ -201,6 +201,15 @@ void Explorerplusplus::OpenFolderItem(PCIDLIST_ABSOLUTE pidlItem,
 		OpenDirectoryInNewWindow(pidlItem);
 		break;
 
+	case OpenFolderDisposition::OtherPane:
+	{
+		auto *tabBar = GetActiveTabBar();
+		auto navigateParams = NavigateParams::Normal(pidlItem);
+		auto &tab = tabBar->CreateNewTab(navigateParams, { .selected = false });
+		tabBar->ShowTabInOtherPane(tab);
+	}
+	break;
+
 	default:
 		DCHECK(false) << "Unhandled disposition";
 		break;
@@ -437,25 +446,29 @@ void Explorerplusplus::UpdateLayout()
 
 	/* <---- ALL listview windows ----> */
 
+	auto &splitState = GetActivePane()->GetSplitPaneState();
+	RECT bounds = { indentLeft, indentTop, std::max(indentLeft, mainWindowWidth - indentRight),
+		std::max(indentTop, mainWindowHeight - indentBottom) };
+
+	if (m_config->showTabBarAtBottom.get() && m_bShowTabBar)
+	{
+		bounds.bottom = std::max(bounds.top, bounds.bottom - tabWindowHeight);
+	}
+
+	int dividerWidth = dpiCompatibility.ScaleValue(m_hwnd, 6);
+	m_view.GetBrowserPaneView()->GetDividerView()->SetBounds(bounds,
+		splitState.GetDividerBounds(bounds, dividerWidth), splitState.IsEnabled());
+
 	for (auto &tab : GetActivePane()->GetTabBar()->GetAllTabs() | boost::adaptors::map_values)
 	{
-		showFlags = SWP_NOZORDER;
+		showFlags =
+			SWP_NOZORDER | (splitState.IsVisible(tab->GetId()) ? SWP_SHOWWINDOW : SWP_HIDEWINDOW);
 
-		if (GetActivePane()->GetTabBar()->IsTabSelected(*tab))
-		{
-			showFlags |= SWP_SHOWWINDOW;
-		}
-
-		int width = mainWindowWidth - indentLeft - indentRight;
-		int height = mainWindowHeight - indentBottom - indentTop;
-
-		if (m_config->showTabBarAtBottom.get() && m_bShowTabBar)
-		{
-			height -= tabWindowHeight;
-		}
-
-		SetWindowPos(tab->GetShellBrowserImpl()->GetListView(), NULL, indentLeft, indentTop, width,
-			height, showFlags);
+		auto paneBounds = splitState.GetBounds(tab->GetId(), bounds, dividerWidth);
+		SetWindowPos(tab->GetShellBrowserImpl()->GetListView(), nullptr, paneBounds.left,
+			paneBounds.top, GetRectWidth(&paneBounds), GetRectHeight(&paneBounds), showFlags);
+		tab->GetShellBrowserImpl()->SetKeepHorizontalScrollBarVisible(
+			splitState.IsEnabled() && splitState.IsVisible(tab->GetId()));
 	}
 
 	/* <---- Status bar ----> */

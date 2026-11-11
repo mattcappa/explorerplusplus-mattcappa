@@ -29,9 +29,3 @@
 - Documentation changes are greatly appreciated. Currently, the documentation (stored under `Documentation\User\Sphinx` and hosted on [Read the Docs](https://explorerplusplus.readthedocs.io/en/latest)) is severely out of date. Work needs to be done to update the documentation to reflect the current behavior of Explorer++.
 
 - Targeted documentation updates would also be very helpful. For example, if you notice that a particular documentation page is inaccurate, submitting a pull request for just that page is still beneficial.
-
-# Translations
-
-- To update an existing translation, please sign up to [Crowdin](https://crowdin.com/) and make the desired changes within the [explorerplusplus](https://crowdin.com/project/explorerplusplus) project there.
-
-- To request a new translation, please create a GitHub issue that states the language that you'd like to work on. That's necessary, since adding a new language requires a set of coordinated changes to be made on Crowdin as well in this repository.

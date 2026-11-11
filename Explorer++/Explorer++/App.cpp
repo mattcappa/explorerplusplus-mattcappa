@@ -16,7 +16,6 @@
 #include "ExitCode.h"
 #include "FileSystemWatcher.h"
 #include "JumpListHelper.h"
-#include "LanguageHelper.h"
 #include "MainResource.h"
 #include "MenuRanges.h"
 #include "RebarBandStorageData.h"
@@ -244,41 +243,14 @@ void App::SaveSettings()
 
 void App::OnConfigLoaded()
 {
-	SetUpLanguageResourceInstance();
+	SetUpResources();
 
 	m_bookmarkTree = std::make_unique<BookmarkTree>(m_resourceLoader.get());
 }
 
-void App::SetUpLanguageResourceInstance()
+void App::SetUpResources()
 {
-	auto languageResult = LanguageHelper::MaybeLoadTranslationDll(m_commandLineSettings, &m_config);
-	LanguageHelper::LanguageInfo languageInfo;
-
-	if (std::holds_alternative<LanguageHelper::LanguageInfo>(languageResult))
-	{
-		languageInfo = std::get<LanguageHelper::LanguageInfo>(languageResult);
-	}
-	else
-	{
-		auto errorCode = std::get<LanguageHelper::LoadError>(languageResult);
-
-		if (errorCode == LanguageHelper::LoadError::VersionMismatch)
-		{
-			std::wstring versionMismatchMessage = ResourceHelper::LoadString(
-				GetModuleHandle(nullptr), IDS_GENERAL_TRANSLATION_DLL_VERSION_MISMATCH);
-			MessageBox(nullptr, versionMismatchMessage.c_str(), AppInfo::NAME, MB_ICONWARNING);
-		}
-
-		languageInfo = { LanguageHelper::DEFAULT_LANGUAGE, GetModuleHandle(nullptr) };
-	}
-
-	m_config.language = languageInfo.language;
-	auto resourceInstance = languageInfo.resourceInstance;
-
-	if (LanguageHelper::IsLanguageRTL(m_config.language))
-	{
-		SetProcessDefaultLayout(LAYOUT_RTL);
-	}
+	auto resourceInstance = GetModuleHandle(nullptr);
 
 	m_resourceLoader = std::make_unique<Win32ResourceLoader>(resourceInstance, m_config.iconSet,
 		&m_darkModeManager, &m_windowThemeManager);

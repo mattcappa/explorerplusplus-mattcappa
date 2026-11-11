@@ -8,7 +8,8 @@
 BrowserPaneView::BrowserPaneView(ViewBase *parent, const ThemeManager *themeManager,
 	const Config *config, const ResourceLoader *resourceLoader) :
 	m_tabBarBackingView(parent, themeManager),
-	m_tabBarView(&m_tabBarBackingView, themeManager, config, resourceLoader)
+	m_tabBarView(&m_tabBarBackingView, themeManager, config, resourceLoader),
+	m_dividerView(parent, themeManager)
 {
 }
 
@@ -20,4 +21,9 @@ TabBarBackingView *BrowserPaneView::GetTabBarBackingView()
 TabBarView *BrowserPaneView::GetTabBarView()
 {
 	return &m_tabBarView;
+}
+
+SplitPaneDividerView *BrowserPaneView::GetDividerView()
+{
+	return &m_dividerView;
 }

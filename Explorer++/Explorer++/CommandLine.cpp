@@ -105,10 +105,6 @@ std::variant<Settings, ExitInfo> Parse(const std::wstring &commandLine)
 			CLI::TransformPairs<ChangeNotifyMode>{ { "shell", ChangeNotifyMode::Shell },
 				{ "filesystem", ChangeNotifyMode::Filesystem } }));
 
-	app.add_option("--language", settings.language,
-		"Allows you to select your desired language. Should be a two-letter language code (e.g. "
-		"FR, RU, etc).");
-
 	// Note that allow_extra_args is set to false, which means that multiple items need to be
 	// specified by supplying the option multiple times. That's done because allowing multiple items
 	// to be specified at once would create ambiguity with the directories option:

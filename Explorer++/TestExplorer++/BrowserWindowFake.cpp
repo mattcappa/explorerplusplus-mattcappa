@@ -157,6 +157,14 @@ void BrowserWindowFake::OpenItem(PCIDLIST_ABSOLUTE pidlItem,
 	}
 	break;
 
+	case OpenFolderDisposition::OtherPane:
+	{
+		auto navigateParams = NavigateParams::Normal(pidlItem);
+		auto &tab = GetActiveTabBar()->CreateNewTab(navigateParams, { .selected = false });
+		GetActiveTabBar()->ShowTabInOtherPane(tab);
+	}
+	break;
+
 	// This case isn't handled yet.
 	case OpenFolderDisposition::NewWindow:
 		break;

@@ -26,9 +26,6 @@ private:
 	void InitializeControls() override;
 	void SetNewTabDirectory(HWND hEdit, const TCHAR *szPath);
 	void SetNewTabDirectory(HWND hEdit, PCIDLIST_ABSOLUTE pidl);
-	void AddLanguages();
-	BOOL AddLanguageToComboBox(HWND hComboBox, const TCHAR *szImageDirectory,
-		const TCHAR *szFileName, WORD *pdwLanguage);
 
 	void OnCommand(WPARAM wParam, LPARAM lParam) override;
 	void OnNewTabDirectoryButtonPressed();

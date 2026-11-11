@@ -53,6 +53,15 @@ void ShellBackgroundContextMenu::BuildMenu(IUnknown *site, Flags flags,
 
 	m_rootMenuView->AppendSeparator();
 
+	m_rootMenuView->AppendItem(
+		MenuItemParams(resourceLoader->LoadString(IDS_GENERAL_OPEN_IN_OTHER_PANE))
+			.SetKey(Item::OpenInOtherPane)
+			.SetHelpText(resourceLoader->LoadString(IDS_GENERAL_OPEN_IN_OTHER_PANE_HELP_TEXT))
+			.SetSelectedCallback([this]
+				{ m_browser->OpenItem(m_directory.Raw(), OpenFolderDisposition::OtherPane); }));
+
+	m_rootMenuView->AppendSeparator();
+
 	if (CanCustomizeDirectory(m_directory.Raw()))
 	{
 		m_rootMenuView->AppendItem(

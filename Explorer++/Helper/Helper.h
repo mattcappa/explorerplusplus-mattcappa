@@ -43,7 +43,6 @@ HRESULT GetMediaMetadata(const TCHAR *szFileName, const TCHAR *szAttribute, BYTE
 BOOL IsImage(const TCHAR *fileName);
 BOOL GetFileProductVersion(const TCHAR *szFullFileName, DWORD *pdwProductVersionLS,
 	DWORD *pdwProductVersionMS);
-BOOL GetFileLanguage(const TCHAR *szFullFileName, WORD *pwLanguage);
 BOOL GetVersionInfoString(const TCHAR *szFullFileName, const TCHAR *szVersionInfo,
 	TCHAR *szVersionBuffer, UINT cchMax);
 
@@ -61,7 +60,6 @@ bool IsExtendedKey(UINT key);
 std::wstring CreateGUID();
 std::optional<std::wstring> GetLastErrorMessage(DWORD error);
 bool IsWindowsPE();
-bool IsProcessRTL();
 wil::unique_hmodule LoadSystemLibrary(const std::wstring &libraryName);
 
 std::optional<std::wstring> GetExpandedEnvironmentVariable(const std::wstring &name);

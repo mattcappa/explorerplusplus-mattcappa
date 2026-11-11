@@ -48,10 +48,6 @@ New-Artifact `
     -Name "explorerpp_${architecture}_symbols.zip" `
     -Files "$repositoryRoot\Explorer++\Explorer++\$Platform\$Configuration\Explorer++.pdb"
 
-New-Artifact `
-    -Name 'explorerpp_translations.zip' `
-    -Files "$repositoryRoot\Explorer++\Win32\$Configuration\Explorer++*.dll"
-
 if ($Platform -ne 'ARM64') {
     Copy-Item `
         "Explorer++\Installer\bin\$architecture\$Configuration\explorerpp_${architecture}_setup.msi" `

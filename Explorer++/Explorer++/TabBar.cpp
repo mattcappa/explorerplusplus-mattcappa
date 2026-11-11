@@ -217,6 +217,7 @@ void TabBar::OnTabRightClicked(Tab *tab, const MouseEvent &event)
 
 void TabBar::OnTabSelected(const Tab &tab)
 {
+	m_splitPaneState.SelectTab(tab.GetId());
 	if (m_iPreviousTabSelectionId != -1)
 	{
 		m_tabSelectionHistory.push_back(m_iPreviousTabSelectionId);
@@ -230,6 +231,29 @@ void TabBar::OnTabSelected(const Tab &tab)
 TabBarView *TabBar::GetView()
 {
 	return m_view;
+}
+
+SplitPaneState &TabBar::GetSplitPaneState()
+{
+	return m_splitPaneState;
+}
+
+void TabBar::ShowTabInOtherPane(const Tab &tab)
+{
+	CHECK_EQ(tab.GetTabBar(), this);
+	const Tab *otherTab = &tab;
+
+	if (IsTabSelected(tab))
+	{
+		auto navigateParams = NavigateParams::Normal(tab.GetShellBrowser()->GetDirectory().Raw());
+		otherTab = &CreateNewTab(navigateParams, { .selected = false },
+			&tab.GetShellBrowser()->GetFolderSettings(),
+			&tab.GetShellBrowser()->GetAllColumnSets());
+	}
+
+	m_splitPaneState.Enable(otherTab->GetId());
+	splitPaneChangedSignal.m_signal();
+	m_browser->FocusActiveTab();
 }
 
 void TabBar::CreateNewTabInDefaultDirectory(const TabSettings &tabSettings)
@@ -423,6 +447,11 @@ bool TabBar::CloseTab(const Tab &tab, CloseMode closeMode)
 	if (!CanCloseTab(tab) && closeMode == CloseMode::Normal)
 	{
 		return false;
+	}
+
+	if (m_splitPaneState.IsVisible(tab.GetId()))
+	{
+		m_splitPaneState.Disable();
 	}
 
 	m_tabEvents->NotifyPreRemoval(tab, GetTabIndex(tab));

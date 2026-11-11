@@ -34,15 +34,6 @@ TEST(BuildFileAttributesString, All)
 	EXPECT_EQ(attributesString, L"AHRSDCPEI");
 }
 
-TEST(IsProcessRTL, CheckValue)
-{
-	// The layout will be LTR by default.
-	EXPECT_EQ(IsProcessRTL(), false);
-
-	SetProcessDefaultLayout(LAYOUT_RTL);
-	EXPECT_EQ(IsProcessRTL(), true);
-}
-
 TEST(HelperTest, GetExpandedEnvironmentVariable)
 {
 	// Nested environment variable expansion.

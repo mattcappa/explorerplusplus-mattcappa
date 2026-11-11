@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Explorer++ (Debug x64)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}\\Explorer++\\Explorer++\\x64\\Debug\\Explorer++.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}\\Explorer++\\Explorer++\\x64\\Debug",
+      "preLaunchTask": "Build Explorer++ (Debug x64)"
+    }
+  ]
+}

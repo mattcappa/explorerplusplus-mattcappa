@@ -17,7 +17,8 @@ enum class OpenFolderDisposition
 	// NewTabAlternate indicates that the calling code wants to open a folder in a new tab, with the
 	// tab taking a background/foreground position, depending on whichever is *not* the default.
 	NewTabDefault,
-	NewTabAlternate
+	NewTabAlternate,
+	OtherPane
 };
 
 // Determines the open disposition, using the state of the ctrl and shift keys as retrieved by

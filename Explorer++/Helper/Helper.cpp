@@ -25,12 +25,11 @@
 enum class VersionSubBlockType
 {
 	Root,
-	Translation,
 	StringTableValue
 };
 
 BOOL GetFileVersionValue(const TCHAR *szFullFileName, VersionSubBlockType subBlockType,
-	WORD *pwLanguage, DWORD *pdwProductVersionLS, DWORD *pdwProductVersionMS,
+	DWORD *pdwProductVersionLS, DWORD *pdwProductVersionMS,
 	const TCHAR *szVersionInfo, TCHAR *szVersionBuffer, UINT cchMax);
 BOOL GetStringTableValue(void *pBlock, LangAndCodePage *plcp, UINT nItems,
 	const TCHAR *szVersionInfo, TCHAR *szVersionBuffer, UINT cchMax);
@@ -410,25 +409,19 @@ BOOL IsImage(const TCHAR *szFileName)
 BOOL GetFileProductVersion(const TCHAR *szFullFileName, DWORD *pdwProductVersionLS,
 	DWORD *pdwProductVersionMS)
 {
-	return GetFileVersionValue(szFullFileName, VersionSubBlockType::Root, nullptr,
+	return GetFileVersionValue(szFullFileName, VersionSubBlockType::Root,
 		pdwProductVersionLS, pdwProductVersionMS, nullptr, nullptr, 0);
-}
-
-BOOL GetFileLanguage(const TCHAR *szFullFileName, WORD *pwLanguage)
-{
-	return GetFileVersionValue(szFullFileName, VersionSubBlockType::Translation, pwLanguage,
-		nullptr, nullptr, nullptr, nullptr, 0);
 }
 
 BOOL GetVersionInfoString(const TCHAR *szFullFileName, const TCHAR *szVersionInfo,
 	TCHAR *szVersionBuffer, UINT cchMax)
 {
-	return GetFileVersionValue(szFullFileName, VersionSubBlockType::StringTableValue, nullptr,
+	return GetFileVersionValue(szFullFileName, VersionSubBlockType::StringTableValue,
 		nullptr, nullptr, szVersionInfo, szVersionBuffer, cchMax);
 }
 
 BOOL GetFileVersionValue(const TCHAR *szFullFileName, VersionSubBlockType subBlockType,
-	WORD *pwLanguage, DWORD *pdwProductVersionLS, DWORD *pdwProductVersionMS,
+	DWORD *pdwProductVersionLS, DWORD *pdwProductVersionMS,
 	const TCHAR *szVersionInfo, TCHAR *szVersionBuffer, UINT cchMax)
 {
 	BOOL bSuccess = FALSE;
@@ -457,8 +450,7 @@ BOOL GetFileVersionValue(const TCHAR *szFullFileName, VersionSubBlockType subBlo
 					pBuffer = reinterpret_cast<LPVOID *>(&pvsffi);
 					uStructureSize = sizeof(VS_FIXEDFILEINFO);
 				}
-				else if (subBlockType == VersionSubBlockType::Translation
-					|| subBlockType == VersionSubBlockType::StringTableValue)
+				else if (subBlockType == VersionSubBlockType::StringTableValue)
 				{
 					StringCchCopy(szSubBlock, std::size(szSubBlock),
 						_T("\\VarFileInfo\\Translation"));
@@ -477,10 +469,6 @@ BOOL GetFileVersionValue(const TCHAR *szFullFileName, VersionSubBlockType subBlo
 					{
 						*pdwProductVersionLS = pvsffi->dwProductVersionLS;
 						*pdwProductVersionMS = pvsffi->dwProductVersionMS;
-					}
-					else if (subBlockType == VersionSubBlockType::Translation)
-					{
-						*pwLanguage = plcp[0].wLanguage;
 					}
 					else if (subBlockType == VersionSubBlockType::StringTableValue)
 					{
@@ -755,21 +743,6 @@ bool IsWindowsPE()
 	LSTATUS result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"System\\ControlSet001\\Control\\MiniNT", 0,
 		KEY_READ, &key);
 	return result == ERROR_SUCCESS;
-}
-
-bool IsProcessRTL()
-{
-	DWORD layout = 0;
-	BOOL res = GetProcessDefaultLayout(&layout);
-
-	if (!res)
-	{
-		LOG_SYSRESULT(GetLastError());
-		DCHECK(false);
-		return false;
-	}
-
-	return (layout == LAYOUT_RTL);
 }
 
 wil::unique_hmodule LoadSystemLibrary(const std::wstring &libraryName)

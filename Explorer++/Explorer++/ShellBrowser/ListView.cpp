@@ -163,9 +163,118 @@ LRESULT ShellBrowserImpl::ListViewProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_APP_INFO_TIP_READY:
 		ProcessInfoTipResult(static_cast<int>(wParam));
 		break;
+
+	case WM_APP_UPDATE_HORIZONTAL_SCROLL_BAR:
+		m_horizontalScrollBarUpdateQueued = false;
+		UpdateHorizontalScrollBar();
+		return 0;
 	}
 
-	return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+	auto result = DefSubclassProc(hwnd, uMsg, wParam, lParam);
+
+	switch (uMsg)
+	{
+	case WM_SIZE:
+	case LVM_SETCOLUMNWIDTH:
+	case LVM_INSERTCOLUMN:
+	case LVM_DELETECOLUMN:
+	case LVM_SETVIEW:
+	case WM_SETREDRAW:
+		if (m_keepHorizontalScrollBarVisible)
+		{
+			QueueHorizontalScrollBarUpdate();
+		}
+		break;
+
+	case WM_NOTIFY:
+		if (m_keepHorizontalScrollBarVisible
+			&& reinterpret_cast<NMHDR *>(lParam)->code == HDN_ITEMCHANGED)
+		{
+			QueueHorizontalScrollBarUpdate();
+		}
+		break;
+	}
+
+	return result;
+}
+
+void ShellBrowserImpl::SetKeepHorizontalScrollBarVisible(bool keepVisible)
+{
+	if (m_keepHorizontalScrollBarVisible == keepVisible)
+	{
+		return;
+	}
+
+	m_keepHorizontalScrollBarVisible = keepVisible;
+	QueueHorizontalScrollBarUpdate();
+}
+
+void ShellBrowserImpl::QueueHorizontalScrollBarUpdate()
+{
+	if (m_updatingHorizontalScrollBar || m_horizontalScrollBarUpdateQueued)
+	{
+		return;
+	}
+
+	// Header notifications arrive before the listview finishes updating its scroll origin.
+	m_horizontalScrollBarUpdateQueued = true;
+	CHECK(PostMessage(m_listView, WM_APP_UPDATE_HORIZONTAL_SCROLL_BAR, 0, 0));
+}
+
+void ShellBrowserImpl::UpdateHorizontalScrollBar()
+{
+	if (m_updatingHorizontalScrollBar || GetViewMode() != ViewMode::Details)
+	{
+		return;
+	}
+
+	m_updatingHorizontalScrollBar = true;
+	auto resetUpdating = wil::scope_exit([this] { m_updatingHorizontalScrollBar = false; });
+	SCROLLINFO info = { sizeof(info), SIF_RANGE | SIF_PAGE | SIF_POS };
+	CHECK(GetScrollInfo(m_listView, SB_HORZ, &info));
+
+	if (m_keepHorizontalScrollBarVisible)
+	{
+		info.fMask |= SIF_DISABLENOSCROLL;
+
+		// When all columns fit, the listview normally hides the bar without updating its range.
+		// Keep the retained bar in sync with the columns, including after scrolling/resizing.
+		RECT clientRect;
+		GetClientRect(m_listView, &clientRect);
+		int totalWidth = 0;
+		int numColumns = Header_GetItemCount(ListView_GetHeader(m_listView));
+
+		for (int column = 0; column < numColumns; column++)
+		{
+			totalWidth += ListView_GetColumnWidth(m_listView, column);
+		}
+
+		RECT headerRect;
+		GetWindowRect(ListView_GetHeader(m_listView), &headerRect);
+		MapWindowPoints(HWND_DESKTOP, m_listView, reinterpret_cast<POINT *>(&headerRect), 2);
+		int currentPosition = -headerRect.left;
+		int maxPosition = std::max(0, totalWidth - static_cast<int>(clientRect.right));
+		int position = std::clamp(currentPosition, 0, maxPosition);
+
+		if (position != currentPosition)
+		{
+			ListView_Scroll(m_listView, position - currentPosition, 0);
+		}
+
+		info.nMin = 0;
+		info.nMax = std::max(0, totalWidth - 1);
+		info.nPage = clientRect.right;
+		info.nPos = position;
+		ShowScrollBar(m_listView, SB_HORZ, true);
+	}
+
+	SetScrollInfo(m_listView, SB_HORZ, &info, true);
+
+	if (m_keepHorizontalScrollBarVisible)
+	{
+		EnableScrollBar(m_listView, SB_HORZ,
+			info.nMax < static_cast<int>(info.nPage) ? ESB_DISABLE_BOTH : ESB_ENABLE_BOTH);
+	}
 }
 
 LRESULT ShellBrowserImpl::ListViewParentProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

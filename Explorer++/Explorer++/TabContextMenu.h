@@ -19,6 +19,7 @@ public:
 	{
 		NewTab,
 		DuplicateTab,
+		OpenInOtherPane,
 		OpenParentInNewTab,
 		Refresh,
 		RefreshAll,
@@ -38,6 +39,7 @@ private:
 	void BuildMenu(const ResourceLoader *resourceLoader);
 
 	void OnDuplicateTab();
+	void OnOpenInOtherPane();
 	void OnOpenParentInNewTab();
 	void OnRefresh();
 	void OnRefreshAllTabs();

@@ -10,7 +10,6 @@
 #include "ThemeWindowTracker.h"
 #include "../Helper/Helper.h"
 #include "../Helper/ImageHelper.h"
-#include "../Helper/ResourceHelper.h"
 
 Win32ResourceLoader::Win32ResourceLoader(HINSTANCE resourceInstance, IconSet iconSet,
 	const DarkModeManager *darkModeManager, WindowThemeManager *windowThemeManager) :
@@ -171,26 +170,8 @@ INT_PTR Win32ResourceLoader::CreateModalDialog(UINT dialogId, HWND parent,
 
 	auto *themedDialogWrapper = ThemedDialogWrapper::Create(dialogProc, m_windowThemeManager);
 
-	if (IsProcessRTL())
-	{
-		// The only legitimate reason this might fail is allocation failure. Given the small amount
-		// of memory involved, that's not very likely to actually happen. If this function does
-		// fail, there's also not any good way of handling it. Therefore, the result is simply
-		// CHECK'd, which will terminate the application if the call fails.
-		auto dialogTemplateEx = MakeRTLDialogTemplate(m_resourceInstance, dialogId);
-		CHECK(dialogTemplateEx);
-
-		res = DialogBoxIndirectParam(m_resourceInstance,
-			reinterpret_cast<DLGTEMPLATE *>(dialogTemplateEx.get()), parent,
-			ThemedDialogWrapper::ThemedDialogProcStub,
-			reinterpret_cast<LPARAM>(themedDialogWrapper));
-	}
-	else
-	{
-		res = DialogBoxParam(m_resourceInstance, MAKEINTRESOURCE(dialogId), parent,
-			ThemedDialogWrapper::ThemedDialogProcStub,
-			reinterpret_cast<LPARAM>(themedDialogWrapper));
-	}
+	res = DialogBoxParam(m_resourceInstance, MAKEINTRESOURCE(dialogId), parent,
+		ThemedDialogWrapper::ThemedDialogProcStub, reinterpret_cast<LPARAM>(themedDialogWrapper));
 
 	if (res == -1)
 	{
@@ -208,22 +189,8 @@ HWND Win32ResourceLoader::CreateModelessDialog(UINT dialogId, HWND parent,
 
 	auto *themedDialogWrapper = ThemedDialogWrapper::Create(dialogProc, m_windowThemeManager);
 
-	if (IsProcessRTL())
-	{
-		auto dialogTemplateEx = MakeRTLDialogTemplate(m_resourceInstance, dialogId);
-		CHECK(dialogTemplateEx);
-
-		dialog = CreateDialogIndirectParam(m_resourceInstance,
-			reinterpret_cast<DLGTEMPLATE *>(dialogTemplateEx.get()), parent,
-			ThemedDialogWrapper::ThemedDialogProcStub,
-			reinterpret_cast<LPARAM>(themedDialogWrapper));
-	}
-	else
-	{
-		dialog = CreateDialogParam(m_resourceInstance, MAKEINTRESOURCE(dialogId), parent,
-			ThemedDialogWrapper::ThemedDialogProcStub,
-			reinterpret_cast<LPARAM>(themedDialogWrapper));
-	}
+	dialog = CreateDialogParam(m_resourceInstance, MAKEINTRESOURCE(dialogId), parent,
+		ThemedDialogWrapper::ThemedDialogProcStub, reinterpret_cast<LPARAM>(themedDialogWrapper));
 
 	if (!dialog)
 	{

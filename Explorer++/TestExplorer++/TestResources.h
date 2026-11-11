@@ -3,7 +3,6 @@
 // Used by TestResources.rc
 //
 #define IDB_BASIC_PNG                   101
-#define IDD_BASIC_DIALOG                102
 
 // Next default values for new objects
 // 

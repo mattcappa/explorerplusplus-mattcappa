@@ -18,3 +18,8 @@ TabBar *BrowserPane::GetTabBar()
 {
 	return &m_tabBar;
 }
+
+SplitPaneState &BrowserPane::GetSplitPaneState()
+{
+	return m_tabBar.GetSplitPaneState();
+}

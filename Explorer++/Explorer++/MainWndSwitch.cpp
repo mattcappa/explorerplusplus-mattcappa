@@ -310,7 +310,7 @@ LRESULT Explorerplusplus::HandleMenuOrToolbarButtonOrAccelerator(HWND hwnd, UINT
 		break;
 
 	case IDM_VIEW_DUAL_PANE:
-		m_config->dualPane = !m_config->dualPane;
+		ToggleSplitPane();
 		break;
 
 	case IDM_VIEW_STATUSBAR:
@@ -586,6 +586,28 @@ LRESULT CALLBACK Explorerplusplus::NotifyHandler(HWND hwnd, UINT msg, WPARAM wPa
 
 	switch (nmhdr->code)
 	{
+	case NM_SETFOCUS:
+	{
+		if (!m_browserPane)
+		{
+			break;
+		}
+
+		auto *tabBar = GetActivePane()->GetTabBar();
+		auto otherTabId = GetActivePane()->GetSplitPaneState().GetOtherTabId();
+
+		if (otherTabId)
+		{
+			auto &tab = tabBar->GetTab(*otherTabId);
+
+			if (nmhdr->hwndFrom == tab.GetShellBrowserImpl()->GetListView())
+			{
+				tabBar->SelectTab(tab);
+			}
+		}
+	}
+	break;
+
 	case LVN_KEYDOWN:
 		return OnListViewKeyDown(lParam);
 	}

@@ -174,14 +174,6 @@ void LoadFromNode(IXMLDOMNode *settingsNode, Config &config)
 		config.globalFolderSettings.hideSystemFiles);
 	GetBoolSetting(settingsNode, L"InsertSorted", config.globalFolderSettings.insertSorted);
 
-	DWORD language;
-	hr = GetIntSetting(settingsNode, L"Language", language);
-
-	if (hr == S_OK)
-	{
-		config.language = static_cast<LANGID>(language);
-	}
-
 	GetBoolSetting(settingsNode, L"LargeToolbarIcons", config.useLargeToolbarIcons);
 	GetBoolSetting(settingsNode, L"LockToolbars", config.lockToolbars);
 	GetBoolSetting(settingsNode, L"NextToCurrent", config.openNewTabNextToCurrent);
@@ -367,8 +359,6 @@ void SaveToNode(IXMLDOMDocument *xmlDocument, IXMLDOMElement *settingsNode, cons
 		XMLSettings::EncodeIntValue(static_cast<int>(config.infoTipType)));
 	XMLSettings::WriteStandardSetting(xmlDocument, settingsNode, SETTING_NODE_NAME, L"InsertSorted",
 		XMLSettings::EncodeBoolValue(config.globalFolderSettings.insertSorted));
-	XMLSettings::WriteStandardSetting(xmlDocument, settingsNode, SETTING_NODE_NAME, L"Language",
-		XMLSettings::EncodeIntValue(config.language));
 	XMLSettings::WriteStandardSetting(xmlDocument, settingsNode, SETTING_NODE_NAME,
 		L"LargeToolbarIcons", XMLSettings::EncodeBoolValue(config.useLargeToolbarIcons.get()));
 	XMLSettings::WriteStandardSetting(xmlDocument, settingsNode, SETTING_NODE_NAME, L"LockToolbars",

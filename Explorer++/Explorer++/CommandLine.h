@@ -20,7 +20,6 @@ struct Settings
 	bool enableLogging = false;
 	std::set<Feature> featuresToEnable;
 	std::optional<ChangeNotifyMode> changeNotifyMode;
-	std::wstring language;
 	bool clearRegistrySettings = false;
 	bool removeAsDefault = false;
 	DefaultFileManager::ReplaceExplorerMode replaceExplorerMode =

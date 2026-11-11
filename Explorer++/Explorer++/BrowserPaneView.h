@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "SplitPaneDividerView.h"
 #include "TabBarBackingView.h"
 #include "TabBarView.h"
 
@@ -20,8 +21,10 @@ public:
 
 	TabBarBackingView *GetTabBarBackingView();
 	TabBarView *GetTabBarView();
+	SplitPaneDividerView *GetDividerView();
 
 private:
 	TabBarBackingView m_tabBarBackingView;
 	TabBarView m_tabBarView;
+	SplitPaneDividerView m_dividerView;
 };

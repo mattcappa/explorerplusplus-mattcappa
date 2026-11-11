@@ -113,6 +113,9 @@ New features:
   Hebrew translations.
 - Config file name and location can be specified with the
   environment variable EXPLORERPP_CONFIG.
+- Internal build: translation DLLs, the Language option, the
+  --language command line option and RTL layout support have
+  been removed. The application is now English only.
 
 Bug fixes:
 - Fixed a crash that could occur on startup when the "Open new

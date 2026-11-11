@@ -571,9 +571,6 @@
     <ClCompile Include="Storage.cpp">
       <Filter>Storage</Filter>
     </ClCompile>
-    <ClCompile Include="LanguageHelper.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="TabEvents.cpp">
       <Filter>Tabs</Filter>
     </ClCompile>
@@ -957,6 +954,9 @@
     </ClCompile>
     <ClCompile Include="TabBarBackingView.cpp">
       <Filter>Tab Backing\UI\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="SplitPaneDividerView.cpp">
+      <Filter>Tabs\UI</Filter>
     </ClCompile>
     <ClCompile Include="BrowserPaneView.cpp">
       <Filter>Core</Filter>
@@ -1611,9 +1611,6 @@
     <ClInclude Include="TestHelper.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="LanguageHelper.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="TabEvents.h">
       <Filter>Tabs</Filter>
     </ClInclude>
@@ -1801,6 +1798,9 @@
       <Filter>ShellBrowser</Filter>
     </ClInclude>
     <ClInclude Include="TabBar.h">
+      <Filter>Tabs\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="SplitPaneState.h">
       <Filter>Tabs\UI</Filter>
     </ClInclude>
     <ClInclude Include="TabBarBackgroundContextMenu.h">
@@ -2111,6 +2111,9 @@
     </ClInclude>
     <ClInclude Include="TabBarBacking.h">
       <Filter>Tab Backing\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="SplitPaneDividerView.h">
+      <Filter>Tabs\UI</Filter>
     </ClInclude>
     <ClInclude Include="BrowserPaneView.h">
       <Filter>Core</Filter>

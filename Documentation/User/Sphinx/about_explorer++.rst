@@ -50,8 +50,5 @@ browsing experience. Aside from basic navigation, **Explorer++** has:
 **Explorer++** requires Windows 7, 8, 10 or 11 (32-bit or 64-bit
 systems) to run; there is no installation required. Windows PE is also supported.
 
-**Explorer++** uses English as its native language, but can be used with
-other :ref:`languages <menus/tools/options/general:Language>` through
-the use of translation DLLs, available on the website. Translations are
-user contributed (thanks for the work!), and as a result, some may be
-incomplete.
+This build of **Explorer++** is English only. Translation DLLs and
+right-to-left layouts are not supported.

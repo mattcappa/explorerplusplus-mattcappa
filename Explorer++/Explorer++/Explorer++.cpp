@@ -251,6 +251,8 @@ void Explorerplusplus::OnTabPreRemoval(const Tab &tab, int index)
 
 void Explorerplusplus::OnTabRemoved(const Tab &tab)
 {
+	UpdateLayout();
+
 	if (tab.GetTabBar()->GetNumTabs() == 0)
 	{
 		// The last tab has been closed, so the window should be closed as well. However, it's not

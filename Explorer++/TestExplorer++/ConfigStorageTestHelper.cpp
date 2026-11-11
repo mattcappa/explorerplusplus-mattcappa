@@ -12,7 +12,6 @@ namespace ConfigStorageTestHelper
 Config BuildReference()
 {
 	Config config;
-	config.language = MAKELANGID(LANG_FRENCH, SUBLANG_FRENCH);
 	config.defaultTabDirectory = L"C:\\";
 	config.alwaysOpenNewTab = true;
 	config.infoTipType = InfoTipType::Custom;

@@ -1,6 +1,5 @@
 [![Build](https://github.com/derceg/explorerplusplus/actions/workflows/build.yml/badge.svg)](https://github.com/derceg/explorerplusplus/actions/workflows/build.yml)
 [![Documentation Status](https://readthedocs.org/projects/explorerplusplus/badge/?version=latest)](https://explorerplusplus.readthedocs.io/en/latest/?badge=latest)
-[![Crowdin](https://d322cqt584bo4o.cloudfront.net/explorerplusplus/localized.svg)](https://crowdin.com/project/explorerplusplus)
 
 # Explorer++
 
@@ -36,10 +35,6 @@ Explorer++ is a lightweight and fast file manager for Windows.
 
 [explorerpp_arm64.zip](https://download.explorerplusplus.com/dev/latest/explorerpp_arm64.zip)
 
-### Translations
-
-[explorerpp_translations.zip](https://download.explorerplusplus.com/dev/latest/explorerpp_translations.zip)
-
 For a full list of builds, see https://explorerplusplus.com/builds.
 
 ## Building Explorer++
@@ -49,7 +44,3 @@ For instructions on how to build Explorer++, see [BUILDING.md](BUILDING.md).
 ## Documentation
 
 Documentation is available online at [Read the Docs](https://explorerplusplus.readthedocs.io/en/latest/).
-
-## Translations
-
-Translations are managed with [Crowdin](https://crowdin.com/project/explorerplusplus). To contribute to a translation, sign up with Crowdin, then edit the file corresponding to your language. If your language isn't listed, use the contact link shown on the project page to request it.

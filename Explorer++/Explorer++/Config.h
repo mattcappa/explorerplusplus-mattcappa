@@ -9,7 +9,6 @@
 #include "DisplayWindowDefaults.h"
 #include "FontHelper.h"
 #include "IconSet.h"
-#include "LanguageHelper.h"
 #include "ShellBrowser/FolderSettings.h"
 #include "Theme.h"
 #include "ValueWrapper.h"
@@ -36,7 +35,6 @@ enum class StartupMode
 // instead be stored in their associated class.
 struct Config
 {
-	LANGID language = LanguageHelper::DEFAULT_LANGUAGE;
 	IconSet iconSet = IconSet::Color;
 	ValueWrapper<Theme> theme = Theme::Light;
 	std::wstring defaultTabDirectory = GetComputerFolderPath();

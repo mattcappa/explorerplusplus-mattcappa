@@ -7,6 +7,7 @@
 #include "AppServices.h"
 #include "Bookmarks/UI/BookmarksMainMenu.h"
 #include "BrowserCommandController.h"
+#include "BrowserPane.h"
 #include "BrowserWindow.h"
 #include "Config.h"
 #include "CoreInterface.h"
@@ -152,10 +153,7 @@ void MainMenu::BuildViewMenu(BrowserWindow *browser, AppServices *appServices)
 {
 	auto *menuView = AppendSubMenu(m_rootMenuView, IDS_VIEW_POPUP);
 
-	if (appServices->GetFeatureList()->IsEnabled(Feature::DualPane))
-	{
-		AppendItem(menuView, IDM_VIEW_DUAL_PANE, IDS_VIEW_DUAL_PANE);
-	}
+	AppendItem(menuView, IDM_VIEW_DUAL_PANE, IDS_VIEW_DUAL_PANE);
 
 	AppendItem(menuView, IDM_VIEW_STATUSBAR, IDS_VIEW_STATUSBAR);
 	AppendItem(menuView, IDM_VIEW_FOLDERS, IDS_VIEW_FOLDERS);
@@ -772,7 +770,7 @@ MenuItemCheckedCallback MainMenu::MaybeGetCheckedCallback(WORD id) const
 	case IDM_VIEW_DUAL_PANE:
 		return [this]
 		{
-			return m_config->dualPane;
+			return m_browser->GetActivePane()->GetSplitPaneState().IsEnabled();
 		};
 
 	case IDM_VIEW_STATUSBAR:

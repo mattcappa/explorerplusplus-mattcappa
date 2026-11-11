@@ -57,6 +57,12 @@ void TabContextMenu::BuildMenu(const ResourceLoader *resourceLoader)
 				[this] { return m_tab->GetShellBrowser()->GetNavigationController()->CanGoUp(); })
 			.SetSelectedCallback([this] { OnOpenParentInNewTab(); }));
 
+	m_rootMenuView->AppendItem(
+		MenuItemParams(resourceLoader->LoadString(IDS_GENERAL_OPEN_IN_OTHER_PANE))
+			.SetKey(Item::OpenInOtherPane)
+			.SetHelpText(resourceLoader->LoadString(IDS_GENERAL_OPEN_IN_OTHER_PANE_HELP_TEXT))
+			.SetSelectedCallback([this] { OnOpenInOtherPane(); }));
+
 	m_rootMenuView->AppendSeparator();
 
 	m_rootMenuView->AppendItem(
@@ -134,6 +140,16 @@ void TabContextMenu::OnDuplicateTab()
 	}
 
 	m_tabBar->DuplicateTab(*m_tab);
+}
+
+void TabContextMenu::OnOpenInOtherPane()
+{
+	if (!m_tab)
+	{
+		return;
+	}
+
+	m_tabBar->ShowTabInOtherPane(*m_tab);
 }
 
 void TabContextMenu::OnOpenParentInNewTab()

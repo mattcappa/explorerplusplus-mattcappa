@@ -18,6 +18,11 @@ class ResourceLoader;
 class ShellBackgroundContextMenu : public ShellContextMenu
 {
 public:
+	enum class Item
+	{
+		OpenInOtherPane
+	};
+
 	enum class Flags
 	{
 		None = 0,

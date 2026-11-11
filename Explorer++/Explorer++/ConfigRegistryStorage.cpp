@@ -129,14 +129,6 @@ void LoadFromKey(HKEY settingsKey, Config &config)
 	RegistrySettings::ReadString(settingsKey, L"NewTabDirectory", config.defaultTabDirectory);
 	RegistrySettings::ReadEnumValue(settingsKey, L"IconTheme", config.iconSet);
 
-	DWORD language;
-	res = RegistrySettings::ReadDword(settingsKey, L"Language", language);
-
-	if (res == ERROR_SUCCESS)
-	{
-		config.language = static_cast<LANGID>(language);
-	}
-
 	RegistrySettings::Read32BitValueFromRegistry(settingsKey, L"OpenTabsInForeground",
 		config.openTabsInForeground);
 	RegistrySettings::Read32BitValueFromRegistry(settingsKey, L"DisplayMixedFilesAndFolders",
@@ -299,7 +291,6 @@ void SaveToKey(HKEY settingsKey, const Config &config)
 	RegistrySettings::SaveDword(settingsKey, L"Theme", static_cast<DWORD>(config.theme.get()));
 	RegistrySettings::SaveString(settingsKey, L"NewTabDirectory", config.defaultTabDirectory);
 	RegistrySettings::SaveDword(settingsKey, L"IconTheme", static_cast<DWORD>(config.iconSet));
-	RegistrySettings::SaveDword(settingsKey, L"Language", config.language);
 	RegistrySettings::SaveDword(settingsKey, L"OpenTabsInForeground", config.openTabsInForeground);
 	RegistrySettings::SaveDword(settingsKey, L"DisplayMixedFilesAndFolders",
 		config.globalFolderSettings.displayMixedFilesAndFolders);

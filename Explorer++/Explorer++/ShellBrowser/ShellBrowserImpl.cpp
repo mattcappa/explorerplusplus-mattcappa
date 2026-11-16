@@ -9,6 +9,7 @@
 #include "ClipboardOperations.h"
 #include "ColorRuleModel.h"
 #include "ColumnDataRetrieval.h"
+#include "ColumnHelper.h"
 #include "Config.h"
 #include "DialogHelper.h"
 #include "DirectoryOperationsHelper.h"
@@ -28,6 +29,7 @@
 #include "Runtime.h"
 #include "ServiceProvider.h"
 #include "ShellEnumeratorImpl.h"
+#include "ShellIconImageList.h"
 #include "ShellNavigationController.h"
 #include "SortModes.h"
 #include "SplitFileDialog.h"
@@ -38,10 +40,12 @@
 #include "../Helper/ClipboardStore.h"
 #include "../Helper/ClipboardWatcher.h"
 #include "../Helper/Controls.h"
+#include "../Helper/DpiCompatibility.h"
 #include "../Helper/DriveInfo.h"
 #include "../Helper/FileActionHandler.h"
 #include "../Helper/FileDialogs.h"
 #include "../Helper/ListViewHelper.h"
+#include "../Helper/ScopedRedrawDisabler.h"
 #include "../Helper/ShellHelper.h"
 #include <wil/com.h>
 #include <commoncontrols.h>
@@ -118,6 +122,7 @@ ShellBrowserImpl::ShellBrowserImpl(const FolderSettings &folderSettings,
 								   : appServices->GetConfig()->globalFolderSettings.folderColumns),
 	m_weakPtrFactory(this)
 {
+	m_dpi = DpiCompatibility::GetInstance().GetDpiForWindow(m_listView);
 	InitializeListView();
 	m_iconFetcher = std::make_unique<IconFetcherImpl>(m_listView, m_cachedIcons);
 
@@ -321,10 +326,16 @@ function, as when a tab is first opened, the view settings
 will need to be initialized. */
 void ShellBrowserImpl::SetViewModeInternal(ViewMode viewMode)
 {
+	std::optional<ScopedRedrawDisabler> redrawDisabler;
+	if (IsWindowVisible(m_listView))
+	{
+		redrawDisabler.emplace(m_listView);
+	}
 	DWORD dwStyle;
 
 	ListView_SetImageList(m_listView, nullptr, LVSIL_SMALL);
 	ListView_SetImageList(m_listView, nullptr, LVSIL_NORMAL);
+	m_smallIconImageList.reset();
 
 	switch (viewMode)
 	{
@@ -366,10 +377,7 @@ void ShellBrowserImpl::SetViewModeInternal(ViewMode viewMode)
 	case ViewMode::List:
 	case ViewMode::Details:
 	{
-		wil::com_ptr_nothrow<IImageList> pImageList;
-		SHGetImageList(SHIL_SMALL, IID_PPV_ARGS(&pImageList));
-		ListView_SetImageList(m_listView, reinterpret_cast<HIMAGELIST>(pImageList.get()),
-			LVSIL_SMALL);
+		UpdateSmallIconImageList();
 	}
 	break;
 	}
@@ -466,6 +474,64 @@ void ShellBrowserImpl::SetViewModeInternal(ViewMode viewMode)
 		{
 			SetFirstColumnTextToFilename();
 		}
+	}
+
+	if (!IsThumbnailsViewMode(viewMode))
+	{
+		ResetIconImages();
+	}
+}
+
+void ShellBrowserImpl::UpdateSmallIconImageList()
+{
+	auto previousImageList = std::move(m_smallIconImageList);
+	m_smallIconImageList = std::make_unique<ShellIconImageList>(
+		DpiCompatibility::GetInstance().GetDpiForWindow(m_listView));
+	ListView_SetImageList(m_listView, m_smallIconImageList->GetImageList(), LVSIL_SMALL);
+}
+
+void ShellBrowserImpl::OnDpiChanged()
+{
+	std::optional<ScopedRedrawDisabler> redrawDisabler;
+	if (IsWindowVisible(m_listView))
+	{
+		redrawDisabler.emplace(m_listView);
+	}
+	UINT dpi = DpiCompatibility::GetInstance().GetDpiForWindow(m_listView);
+	ScaleColumnWidths(m_folderColumns, m_dpi, dpi);
+	m_dpi = dpi;
+
+	if (m_folderSettings.viewMode == ViewMode::Details)
+	{
+		int index = 0;
+		for (const auto &column : *m_pActiveColumns)
+		{
+			if (column.checked)
+			{
+				ListView_SetColumnWidth(m_listView, index++, column.width);
+			}
+		}
+	}
+
+	if (m_smallIconImageList)
+	{
+		UpdateSmallIconImageList();
+		ResetIconImages();
+	}
+
+	InvalidateRect(m_listView, nullptr, false);
+}
+
+void ShellBrowserImpl::ResetIconImages()
+{
+	for (int index = 0; index < ListView_GetItemCount(m_listView); index++)
+	{
+		LVITEM item = {};
+		item.mask = LVIF_IMAGE | LVIF_STATE;
+		item.iItem = index;
+		item.iImage = I_IMAGECALLBACK;
+		item.stateMask = LVIS_OVERLAYMASK;
+		CHECK(ListView_SetItem(m_listView, &item));
 	}
 }
 

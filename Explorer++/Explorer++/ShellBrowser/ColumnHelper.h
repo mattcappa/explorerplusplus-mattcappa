@@ -8,6 +8,8 @@
 #include <string>
 
 class ResourceLoader;
+struct FolderColumns;
 
 std::wstring GetColumnName(const ResourceLoader *resourceLoader, ColumnType columnType);
 std::wstring GetColumnDescription(const ResourceLoader *resourceLoader, ColumnType columnType);
+void ScaleColumnWidths(FolderColumns &columns, UINT oldDpi, UINT newDpi);

@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="ShellIconImageListTest.cpp">
+      <Filter>ShellBrowser</Filter>
+    </ClCompile>
     <ClCompile Include="BookmarkClipboardTest.cpp">
       <Filter>Bookmarks</Filter>
     </ClCompile>
@@ -663,6 +666,9 @@
     </ClCompile>
     <ClCompile Include="TabViewTest.cpp">
       <Filter>UI\Views\TabView</Filter>
+    </ClCompile>
+    <ClCompile Include="DisplayWindowTest.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="CustomizableToolbarViewTest.cpp">
       <Filter>UI\Views\Toolbar</Filter>

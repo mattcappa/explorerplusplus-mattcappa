@@ -23,10 +23,12 @@
 #include "ServiceProvider.h"
 #include "ShellBackgroundContextMenu.h"
 #include "ShellBrowserEvents.h"
+#include "ShellIconImageList.h"
 #include "ShellItemContextMenu.h"
 #include "ShellNavigationController.h"
 #include "ShellView.h"
 #include "../Helper/CachedIcons.h"
+#include "../Helper/DpiCompatibility.h"
 #include "../Helper/DragDropHelper.h"
 #include "../Helper/FileActionHandler.h"
 #include "../Helper/Helper.h"
@@ -73,6 +75,10 @@ LRESULT ShellBrowserImpl::ListViewProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 {
 	switch (uMsg)
 	{
+	case WM_DPICHANGED_AFTERPARENT:
+		OnDpiChanged();
+		break;
+
 	// NM_DBLCLK for the listview is sent both on double clicks (by default), as well as in the
 	// situation when LVS_EX_ONECLICKACTIVATE is active (in which case it's sent on a single mouse
 	// click). Navigation up should only occur on a double click, which is why WM_LBUTTONDBLCLK is
@@ -768,6 +774,11 @@ void ShellBrowserImpl::OnListViewGetDisplayInfo(LPARAM lParam)
 			}
 		}
 
+		if (m_smallIconImageList)
+		{
+			plvItem->iImage = m_smallIconImageList->GetIconIndex(plvItem->iImage);
+		}
+
 		m_iconFetcher->QueueIconTask(itemInfo.pidlComplete.Raw(),
 			[this, internalIndex](int iconIndex, int overlayIndex)
 			{ ProcessIconResult(internalIndex, iconIndex, overlayIndex); });
@@ -778,6 +789,11 @@ void ShellBrowserImpl::OnListViewGetDisplayInfo(LPARAM lParam)
 
 void ShellBrowserImpl::ProcessIconResult(int internalIndex, int iconIndex, int overlayIndex)
 {
+	if (IsThumbnailsViewMode(m_folderSettings.viewMode))
+	{
+		return;
+	}
+
 	auto index = LocateItemByInternalIndex(internalIndex);
 
 	if (!index)
@@ -789,9 +805,11 @@ void ShellBrowserImpl::ProcessIconResult(int internalIndex, int iconIndex, int o
 	lvItem.mask = LVIF_IMAGE | LVIF_STATE;
 	lvItem.iItem = *index;
 	lvItem.iSubItem = 0;
-	lvItem.iImage = iconIndex;
+	lvItem.iImage = m_smallIconImageList
+		? m_smallIconImageList->GetIconIndex(iconIndex, overlayIndex, true)
+		: iconIndex;
 	lvItem.stateMask = LVIS_OVERLAYMASK;
-	lvItem.state = INDEXTOOVERLAYMASK(overlayIndex);
+	lvItem.state = m_smallIconImageList ? 0 : INDEXTOOVERLAYMASK(overlayIndex);
 	ListView_SetItem(m_listView, &lvItem);
 }
 

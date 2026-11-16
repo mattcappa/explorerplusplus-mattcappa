@@ -64,10 +64,13 @@ public:
 		AppServices *appServices, Config *config);
 
 	HWND GetHWND() const;
+	int GetMinimumHeight() const;
 
 	void ExtractThumbnailImageInternal(ThumbnailEntry_t *pte);
 
 private:
+	friend class DisplayWindowTest;
+
 	static inline const Gdiplus::Color BORDER_COLOUR{ 128, 128, 128 };
 
 	static inline const wchar_t CLASS_NAME[] = L"DisplayWindow";
@@ -85,7 +88,9 @@ private:
 	LONG OnMouseMove(LPARAM lParam);
 	void OnLButtonDown(LPARAM lParam);
 	void OnShowContextMenu(const POINT &ptScreen);
-	void PaintText(HDC, unsigned int);
+	void PaintText(HDC hdc);
+	std::vector<RECT> CalculateTextRects(HDC hdc);
+	RECT GetIconRect() const;
 	void TransparentTextOut(HDC hdc, TCHAR *text, RECT *prcText);
 	void DrawThumbnail(HDC hdcMem);
 	void OnSetThumbnailFile(WPARAM wParam, LPARAM lParam);
@@ -98,6 +103,7 @@ private:
 
 	void InvalidateWindow();
 	void OnFontConfigChanged();
+	void OnDpiChanged();
 
 	const HWND m_hwnd;
 	const Mode m_mode;
@@ -111,14 +117,9 @@ private:
 	std::vector<boost::signals2::scoped_connection> m_connections;
 
 	wil::com_ptr_nothrow<IImageList> m_systemImageList;
-	int m_folderIconWidth;
-	int m_folderIconHeight;
 
+	UINT m_dpi;
 	wil::unique_hfont m_font;
-
-	/* Text drawing attributes. */
-	unsigned int m_LineSpacing;
-	unsigned int m_LeftIndent;
 
 	/* Text buffers (for internal redrawing operations). */
 	std::vector<LineData_t> m_LineList;

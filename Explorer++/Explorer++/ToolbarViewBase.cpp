@@ -403,6 +403,7 @@ LRESULT ToolbarViewBase::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 		break;
 
 	case WM_DPICHANGED_AFTERPARENT:
+		dpiChangedSignal.m_signal();
 		OnFontOrDpiUpdated();
 		break;
 	}

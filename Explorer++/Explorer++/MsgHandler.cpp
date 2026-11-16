@@ -261,6 +261,18 @@ void Explorerplusplus::OnSize(UINT state)
 	UpdateLayout();
 }
 
+void Explorerplusplus::OnDpiChanged(UINT dpi)
+{
+	m_dpiChangePending = true;
+	m_treeViewWidth = MulDiv(m_treeViewWidth, dpi, m_layoutDpi);
+	m_displayWindowWidth = MulDiv(m_displayWindowWidth, dpi, m_layoutDpi);
+	m_displayWindowHeight = MulDiv(m_displayWindowHeight, dpi, m_layoutDpi);
+	m_layoutDpi = dpi;
+
+	// Child controls update their fonts and sizes after WM_DPICHANGED returns.
+	ScheduleUpdateLayout(m_weakPtrFactory.GetWeakPtr(), m_appServices->GetRuntime());
+}
+
 concurrencpp::null_result Explorerplusplus::ScheduleUpdateLayout(WeakPtr<Explorerplusplus> self,
 	Runtime *runtime)
 {
@@ -275,12 +287,13 @@ concurrencpp::null_result Explorerplusplus::ScheduleUpdateLayout(WeakPtr<Explore
 		co_return;
 	}
 
+	self->m_dpiChangePending = false;
 	self->UpdateLayout();
 }
 
 void Explorerplusplus::UpdateLayout()
 {
-	if (GetLifecycleState() != LifecycleState::Main)
+	if (GetLifecycleState() != LifecycleState::Main || m_dpiChangePending)
 	{
 		return;
 	}
@@ -313,7 +326,9 @@ void Explorerplusplus::UpdateLayout()
 	m_displayWindowWidth = std::max(m_displayWindowWidth,
 		dpiCompatibility.ScaleValue(m_displayWindow->GetHWND(), DISPLAY_WINDOW_MINIMUM_WIDTH));
 	m_displayWindowHeight = std::max(m_displayWindowHeight,
-		dpiCompatibility.ScaleValue(m_displayWindow->GetHWND(), DISPLAY_WINDOW_MINIMUM_HEIGHT));
+		std::max(m_displayWindow->GetMinimumHeight(),
+			dpiCompatibility.ScaleValue(m_displayWindow->GetHWND(),
+				DISPLAY_WINDOW_MINIMUM_HEIGHT)));
 
 	auto *mainRebarView = m_view.GetMainRebarView();
 	auto rebarHeight = mainRebarView->GetHeight();
@@ -659,10 +674,9 @@ void Explorerplusplus::FocusActiveTab()
 
 bool Explorerplusplus::OnActivate(int activationState, bool minimized)
 {
-	// This may be called while the window is being constructed, before it has been added to the
-	// browser list. In that case, the window won't be visible and there's no need to try and set it
-	// as the active browser.
-	if (IsWindowVisible(m_hwnd) && activationState != WA_INACTIVE && !minimized)
+	// ShowWindow can activate the window before the constructor adds it to the browser list.
+	if (IsWindowVisible(m_hwnd) && activationState != WA_INACTIVE && !minimized
+		&& m_browserList->MaybeGetById(GetId()) == this)
 	{
 		m_browserList->SetLastActive(this);
 	}

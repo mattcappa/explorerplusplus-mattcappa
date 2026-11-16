@@ -420,7 +420,8 @@ MainToolbar::MainToolbar(MainToolbarView *view,
 void MainToolbar::Initialize(const std::optional<MainToolbarLayout> &initialLayout)
 {
 	CreateImageLists();
-	SetToolbarImageList();
+	m_connections.push_back(m_view->dpiChangedSignal.AddObserver(
+		std::bind_front(&MainToolbar::CreateImageLists, this)));
 
 	InitializeAvailableButtons();
 	m_view->SetDefaultItems(ToToolbarItems(GetDefaultButtons()));
@@ -455,21 +456,23 @@ void MainToolbar::CreateImageLists()
 
 	int numImages = static_cast<int>(magic_enum::enum_count<MainToolbarButtonId>() - 1);
 
-	m_imageListSmall.reset(ImageList_Create(dpiScaledSizeSmall, dpiScaledSizeSmall,
+	wil::unique_himagelist imageListSmall(ImageList_Create(dpiScaledSizeSmall, dpiScaledSizeSmall,
 		ILC_COLOR32 | ILC_MASK, numImages, 0));
-	m_imageListLarge.reset(ImageList_Create(dpiScaledSizeLarge, dpiScaledSizeLarge,
+	wil::unique_himagelist imageListLarge(ImageList_Create(dpiScaledSizeLarge, dpiScaledSizeLarge,
 		ILC_COLOR32 | ILC_MASK, numImages, 0));
+	CHECK(imageListSmall);
+	CHECK(imageListLarge);
 
 	for (const auto &mapping : BUTTON_ICON_MAPPINGS)
 	{
 		wil::unique_hbitmap smallBitmap = m_resourceLoader->LoadBitmapFromPNGForDpi(mapping.icon,
 			TOOLBAR_IMAGE_SIZE_SMALL, TOOLBAR_IMAGE_SIZE_SMALL, dpi);
-		int smallImageIndex = ImageList_Add(m_imageListSmall.get(), smallBitmap.get(), nullptr);
+		int smallImageIndex = ImageList_Add(imageListSmall.get(), smallBitmap.get(), nullptr);
 		CHECK(smallImageIndex != -1);
 
 		wil::unique_hbitmap largeBitmap = m_resourceLoader->LoadBitmapFromPNGForDpi(mapping.icon,
 			TOOLBAR_IMAGE_SIZE_LARGE, TOOLBAR_IMAGE_SIZE_LARGE, dpi);
-		int largeImageIndex = ImageList_Add(m_imageListLarge.get(), largeBitmap.get(), nullptr);
+		int largeImageIndex = ImageList_Add(imageListLarge.get(), largeBitmap.get(), nullptr);
 		CHECK(largeImageIndex != -1);
 
 		// When the config option to use large toolbar icons is toggled, the image list assigned to
@@ -481,6 +484,11 @@ void MainToolbar::CreateImageLists()
 
 		m_idToImageIndexMap.insert({ mapping.button, smallImageIndex });
 	}
+
+	m_view->SetImageList(
+		m_config->useLargeToolbarIcons.get() ? imageListLarge.get() : imageListSmall.get());
+	m_imageListSmall = std::move(imageListSmall);
+	m_imageListLarge = std::move(imageListLarge);
 }
 
 void MainToolbar::SetToolbarImageList()

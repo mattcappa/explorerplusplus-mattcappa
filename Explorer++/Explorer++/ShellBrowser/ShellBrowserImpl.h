@@ -55,6 +55,7 @@ class Runtime;
 class ShellBrowserEvents;
 class ShellEnumeratorImpl;
 class ShellNavigationController;
+class ShellIconImageList;
 class WindowSubclass;
 
 typedef struct
@@ -178,6 +179,10 @@ protected:
 	const NavigationManager *GetNavigationManager() const override;
 
 private:
+	void OnDpiChanged();
+	void UpdateSmallIconImageList();
+	void ResetIconImages();
+
 	void QueueHorizontalScrollBarUpdate();
 	void UpdateHorizontalScrollBar();
 	bool m_keepHorizontalScrollBarVisible = false;
@@ -657,6 +662,8 @@ private:
 	// is set consistently.
 	MainFontSetter m_fontSetter;
 	MainFontSetter m_tooltipFontSetter;
+	std::unique_ptr<ShellIconImageList> m_smallIconImageList;
+	UINT m_dpi;
 
 	DirectoryState m_directoryState;
 

@@ -4,9 +4,25 @@
 
 #include "stdafx.h"
 #include "ColumnHelper.h"
+#include "FolderSettings.h"
 #include "MainResource.h"
 #include "ResourceLoader.h"
 #include <optional>
+
+void ScaleColumnWidths(FolderColumns &columns, UINT oldDpi, UINT newDpi)
+{
+	CHECK_GT(oldDpi, 0u);
+	CHECK_GT(newDpi, 0u);
+	for (auto *set : { &columns.realFolderColumns, &columns.myComputerColumns,
+			 &columns.controlPanelColumns, &columns.recycleBinColumns, &columns.printersColumns,
+			 &columns.networkConnectionsColumns, &columns.myNetworkPlacesColumns })
+	{
+		for (auto &column : *set)
+		{
+			column.width = MulDiv(column.width, newDpi, oldDpi);
+		}
+	}
+}
 
 std::wstring GetColumnName(const ResourceLoader *resourceLoader, ColumnType columnType)
 {

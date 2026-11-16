@@ -8,6 +8,9 @@
 #include "DisplayWindow/DisplayWindow.h"
 #include "MainResource.h"
 #include "ResourceLoader.h"
+#include "../Helper/DpiCompatibility.h"
+#include "../Helper/WindowHelper.h"
+#include "../Helper/WindowSubclass.h"
 
 const TCHAR DisplayColoursDialogPersistentSettings::SETTINGS_KEY[] = _T("DisplayColors");
 
@@ -26,6 +29,8 @@ DisplayColoursDialog::DisplayColoursDialog(HWND parent, BrowserWindow *browser,
 {
 	m_pdcdps = &DisplayColoursDialogPersistentSettings::GetInstance();
 }
+
+DisplayColoursDialog::~DisplayColoursDialog() = default;
 
 INT_PTR DisplayColoursDialog::OnInitDialog()
 {
@@ -128,9 +133,20 @@ void DisplayColoursDialog::InitializePreviewWindow()
 	DisplayWindow_BufferText(m_previewDisplayWindow->GetHWND(), modificationDate.c_str());
 
 	RECT rc;
-	GetWindowRect(hStatic, &rc);
-	SetWindowPos(m_previewDisplayWindow->GetHWND(), nullptr, 0, 0, rc.right, rc.bottom,
-		SWP_SHOWWINDOW | SWP_NOZORDER);
+	GetClientRect(hStatic, &rc);
+	SetWindowPos(m_previewDisplayWindow->GetHWND(), nullptr, 0, 0, GetRectWidth(&rc),
+		GetRectHeight(&rc), SWP_SHOWWINDOW | SWP_NOZORDER);
+
+	m_previewSubclass = std::make_unique<WindowSubclass>(hStatic,
+		[this](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+		{
+			if (msg == WM_SIZE)
+			{
+				SetWindowPos(m_previewDisplayWindow->GetHWND(), nullptr, 0, 0, LOWORD(lParam),
+					HIWORD(lParam), SWP_NOZORDER | SWP_NOACTIVATE);
+			}
+			return DefSubclassProc(hwnd, msg, wParam, lParam);
+		});
 
 	SetColorGroupValues(m_centerGroup, m_previewConfig.displayWindowCentreColor.get());
 	SetColorGroupValues(m_surroundingGroup, m_previewConfig.displayWindowSurroundColor.get());
@@ -188,6 +204,11 @@ void DisplayColoursDialog::OnRestoreDefaults()
 void DisplayColoursDialog::OnChooseFont()
 {
 	LOGFONT currentFont = m_previewConfig.displayWindowFont.get();
+	auto dc = wil::GetDC(m_hDlg);
+	int dpi = GetDeviceCaps(dc.get(), LOGPIXELSY);
+	CHECK_GT(dpi, 0);
+	currentFont.lfHeight = MulDiv(currentFont.lfHeight, dpi, USER_DEFAULT_SCREEN_DPI);
+	currentFont.lfWidth = MulDiv(currentFont.lfWidth, dpi, USER_DEFAULT_SCREEN_DPI);
 
 	CHOOSEFONT cf = {};
 	TCHAR szStyle[512];
@@ -202,6 +223,8 @@ void DisplayColoursDialog::OnChooseFont()
 
 	if (res)
 	{
+		currentFont.lfHeight = -MulDiv(cf.iPointSize, USER_DEFAULT_SCREEN_DPI, 720);
+		currentFont.lfWidth = MulDiv(currentFont.lfWidth, USER_DEFAULT_SCREEN_DPI, dpi);
 		m_previewConfig.displayWindowFont = *cf.lpLogFont;
 		m_previewConfig.displayWindowTextColor = cf.rgbColors;
 	}

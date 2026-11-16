@@ -60,22 +60,31 @@ private:
 FoldersPaneToolbar::FoldersPaneToolbar(FoldersPaneToolbarView *view, Config *config,
 	MenuHelpTextHost *menuHelpTextHost, const AcceleratorManager *acceleratorManager,
 	const ResourceLoader *resourceLoader) :
-	ToolbarBase(view, menuHelpTextHost, acceleratorManager)
+	ToolbarBase(view, menuHelpTextHost, acceleratorManager),
+	m_view(view),
+	m_resourceLoader(resourceLoader)
+{
+	UpdateImageList();
+	auto closeButton = std::make_unique<CloseButton>(config, resourceLoader, 0);
+	view->AddButton(std::move(closeButton), 0);
+	m_dpiConnection = view->dpiChangedSignal.AddObserver(
+		std::bind_front(&FoldersPaneToolbar::UpdateImageList, this));
+}
+
+void FoldersPaneToolbar::UpdateImageList()
 {
 	auto &dpiCompat = DpiCompatibility::GetInstance();
-	UINT dpi = dpiCompat.GetDpiForWindow(view->GetHWND());
+	UINT dpi = dpiCompat.GetDpiForWindow(m_view->GetHWND());
 	int iconWidth = dpiCompat.GetSystemMetricsForDpi(SM_CXSMICON, dpi);
 	int iconHeight = dpiCompat.GetSystemMetricsForDpi(SM_CYSMICON, dpi);
-	m_imageList.reset(ImageList_Create(iconWidth, iconHeight, ILC_COLOR32 | ILC_MASK, 1, 0));
-	CHECK(m_imageList);
+	wil::unique_himagelist imageList(
+		ImageList_Create(iconWidth, iconHeight, ILC_COLOR32 | ILC_MASK, 1, 0));
+	CHECK(imageList);
 
 	wil::unique_hbitmap closeIcon =
-		resourceLoader->LoadBitmapFromPNGAndScale(Icon::CloseButton, iconWidth, iconHeight);
-	int closeIconImageIndex = ImageList_Add(m_imageList.get(), closeIcon.get(), nullptr);
-	CHECK_NE(closeIconImageIndex, -1);
-
-	view->SetImageList(m_imageList.get());
-
-	auto closeButton = std::make_unique<CloseButton>(config, resourceLoader, closeIconImageIndex);
-	view->AddButton(std::move(closeButton), 0);
+		m_resourceLoader->LoadBitmapFromPNGAndScale(Icon::CloseButton, iconWidth, iconHeight);
+	int closeIconImageIndex = ImageList_Add(imageList.get(), closeIcon.get(), nullptr);
+	CHECK_EQ(closeIconImageIndex, 0);
+	m_view->SetImageList(imageList.get());
+	m_imageList = std::move(imageList);
 }

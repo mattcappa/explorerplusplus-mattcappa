@@ -181,6 +181,8 @@ public:
 	size_t FindNextButtonIndex(const POINT &ptClient) const;
 	void SetHotItem(const ToolbarButton *button);
 
+	SignalWrapper<ToolbarViewBase, void()> dpiChangedSignal;
+
 protected:
 	// Items are largely referred to by their indexes, but there are certain cases where the command
 	// ID has to be used (e.g. when processing a toolbar notification). Since command IDs and

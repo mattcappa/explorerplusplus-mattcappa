@@ -103,8 +103,18 @@ LRESULT FoldersPaneView::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 		break;
 
 	case WM_DPICHANGED_AFTERPARENT:
+	{
+		bool usingDefaultFont = m_font == m_defaultFont.get();
+		auto systemFont = GetDefaultSystemFontScaledToWindow(GetHWND());
+		m_defaultFont.reset(CreateFontIndirect(&systemFont));
+		CHECK(m_defaultFont);
+		if (usingDefaultFont)
+		{
+			m_font = m_defaultFont.get();
+		}
 		OnCaptionMetricsChanged();
 		break;
+	}
 
 	case WM_ERASEBKGND:
 		return 1;

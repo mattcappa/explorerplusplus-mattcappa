@@ -173,6 +173,7 @@ private:
 	void OnFoldersPaneResized(int newWidth);
 	bool OnActivate(int activationState, bool minimized);
 	void OnSize(UINT state);
+	void OnDpiChanged(UINT dpi);
 	static concurrencpp::null_result ScheduleUpdateLayout(WeakPtr<Explorerplusplus> self,
 		Runtime *runtime);
 	void UpdateLayout();
@@ -290,6 +291,8 @@ private:
 	DisplayWindow *m_displayWindow = nullptr;
 	int m_displayWindowWidth = LayoutDefaults::DEFAULT_DISPLAY_WINDOW_WIDTH;
 	int m_displayWindowHeight = LayoutDefaults::DEFAULT_DISPLAY_WINDOW_HEIGHT;
+	UINT m_layoutDpi;
+	bool m_dpiChangePending = false;
 
 	std::unique_ptr<MainMenu> m_mainMenu;
 

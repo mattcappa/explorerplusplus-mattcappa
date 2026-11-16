@@ -19,5 +19,10 @@ public:
 		const ResourceLoader *resourceLoader);
 
 private:
+	void UpdateImageList();
+
+	FoldersPaneToolbarView *const m_view;
+	const ResourceLoader *const m_resourceLoader;
 	wil::unique_himagelist m_imageList;
+	boost::signals2::scoped_connection m_dpiConnection;
 };

@@ -12,6 +12,7 @@ class AppServices;
 class BrowserWindow;
 class DisplayColoursDialog;
 class DisplayWindow;
+class WindowSubclass;
 
 class DisplayColoursDialogPersistentSettings : public DialogSettings
 {
@@ -63,7 +64,7 @@ private:
 	static const int TICK_REQUENCY = 10;
 
 	DisplayColoursDialog(HWND parent, BrowserWindow *browser, AppServices *appServices);
-	~DisplayColoursDialog() = default;
+	~DisplayColoursDialog();
 
 	void OnRestoreDefaults();
 	void OnChooseFont();
@@ -85,6 +86,7 @@ private:
 	AppServices *const m_appServices;
 	Config m_previewConfig;
 	DisplayWindow *m_previewDisplayWindow = nullptr;
+	std::unique_ptr<WindowSubclass> m_previewSubclass;
 
 	ColorGroup m_centerGroup[NUM_COLORS];
 	ColorGroup m_surroundingGroup[NUM_COLORS];

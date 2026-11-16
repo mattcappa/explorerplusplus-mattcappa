@@ -9,6 +9,7 @@
 #include "CoreInterface.h"
 #include "MainToolbarView.h"
 #include "ShellIconLoaderFake.h"
+#include "../Helper/DpiCompatibility.h"
 
 namespace
 {
@@ -69,4 +70,22 @@ TEST_F(MainToolbarTest, GetLayoutForStorage)
 
 	auto layout = mainToolbar.GetLayoutForStorage();
 	EXPECT_EQ(layout.GetButtons(), initialLayout.GetButtons());
+}
+
+TEST_F(MainToolbarTest, ReloadsIconsOnDpiChangeWithoutChangingLayout)
+{
+	MainToolbarView view(m_browser->GetView(), m_browser, &m_config);
+	MainToolbar toolbar(&view, std::nullopt, m_browser, &m_appServices, &m_coreInterface,
+		&m_shellIconLoader);
+	auto initialLayout = toolbar.GetLayoutForStorage().GetButtons();
+	auto originalImages = view.MaybeGetImageList();
+
+	SendMessage(view.GetHWND(), WM_DPICHANGED_AFTERPARENT, 0, 0);
+	EXPECT_NE(view.MaybeGetImageList(), originalImages);
+	EXPECT_EQ(toolbar.GetLayoutForStorage().GetButtons(), initialLayout);
+	int width;
+	int height;
+	ASSERT_TRUE(ImageList_GetIconSize(view.MaybeGetImageList(), &width, &height));
+	EXPECT_EQ(width, DpiCompatibility::GetInstance().ScaleValue(view.GetHWND(), 16));
+	EXPECT_EQ(height, width);
 }

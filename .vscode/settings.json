@@ -1,0 +1,21 @@
+{
+	"chat.useAgentsMdFile": true,
+	"chat.useNestedAgentsMdFiles": true,
+	"search.exclude": {
+		"vcpkg_installed/**": true,
+		"**/x64/**": true,
+		"**/Win32/**": true,
+		"**/ARM64/**": true,
+		"Explorer++/ThirdParty/**": true,
+		"**/.vs/**": true,
+		"**/*.ipch": true
+	},
+	"files.watcherExclude": {
+		"**/vcpkg_installed/**": true,
+		"**/x64/**": true,
+		"**/Win32/**": true,
+		"**/ARM64/**": true,
+		"**/Explorer++/ThirdParty/**": true,
+		"**/.vs/**": true
+	}
+}

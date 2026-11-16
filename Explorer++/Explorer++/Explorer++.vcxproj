@@ -1233,6 +1233,7 @@
     <ClCompile Include="MainRebar.cpp" />
     <ClCompile Include="TabBarView.cpp" />
     <ClCompile Include="TabBarViewImageListManager.cpp" />
+    <ClCompile Include="ShellIconImageList.cpp" />
     <ClCompile Include="MainToolbarLayout.cpp" />
     <ClCompile Include="MainToolbarView.cpp" />
     <ClCompile Include="MassRenameHelper.cpp" />
@@ -1616,6 +1617,7 @@
     <ClInclude Include="MainRebar.h" />
     <ClInclude Include="TabBarView.h" />
     <ClInclude Include="TabBarViewImageListManager.h" />
+    <ClInclude Include="ShellIconImageList.h" />
     <ClInclude Include="MainToolbarLayout.h" />
     <ClInclude Include="MainToolbarView.h" />
     <ClInclude Include="MassRenameHelper.h" />

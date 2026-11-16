@@ -1,78 +1,54 @@
 ---
 name: explorerplusplus-build-test
-description: How to build, run, debug and test Explorer++ locally with MSBuild, vcpkg and the TestExplorer++ GoogleTest executable, plus how the CI matrix works and how to troubleshoot common build failures. Use when compiling, running unit tests, validating a change, or fixing build errors.
+description: Explorer++ build setup, configurations, CI and GoogleTest/gMock test patterns. Use when building, changing build configuration, adding tests or troubleshooting failures.
 ---
 
 # Building and testing Explorer++
 
-## Prerequisites
+Use the exact local build commands in the root `AGENTS.md`; this skill covers setup, project-specific gotchas and test patterns.
 
-- Visual Studio 2022, or Build Tools 2022, with the **Desktop development with C++** workload and a Windows SDK.
-- The vcpkg submodule at `Explorer++\ThirdParty\vcpkg`, initialised and bootstrapped:
-  ```powershell
-  git submodule update --init --recursive
-  .\Explorer++\ThirdParty\vcpkg\bootstrap-vcpkg.bat
-  ```
-  The root `Directory.Build.props` and `Directory.Build.targets` import vcpkg's MSBuild integration. The first build installs the dependencies listed in `vcpkg.json` into `vcpkg_installed\`.
+## Build setup
 
-## Find MSBuild
+- Use Visual Studio 2022 / Build Tools with **Desktop development with C++** and a Windows SDK.
+- Initialise and bootstrap the `Explorer++\\ThirdParty\\vcpkg` submodule if needed. Root MSBuild props import vcpkg; the first build installs manifest dependencies to `vcpkg_installed\\`.
+- Find MSBuild with `vswhere`; it is not necessarily on `PATH`. If using `vcvars`, run setup and build in the same `cmd /c` process.
+- Configurations: `Debug`, `Debug-Asan`, `Debug-Clang`, `Release`, `Release-Clang`; platforms: `Win32`, `x64`, `ARM64`.
+- `Scripts\\build-debug.ps1` and the VS Code **Explorer++ (Debug x64)** launch configuration wrap the app build.
+- The test project has no `Build.0` for solution `Debug|x64`; build its `.vcxproj` directly and pass `SolutionDir` (command in `AGENTS.md`).
 
-Don't assume MSBuild is on `PATH`. Find it with vswhere:
+## Tests
 
-```powershell
-$vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-$msbuild = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\Current\Bin\MSBuild.exe'
-```
+- Tests are GoogleTest/gMock in `Explorer++\\TestExplorer++`; `TestHelper` is legacy and should not receive new tests.
+- Choose a fixture:
 
-## Build the app
+  | Need | Fixture |
+  | --- | --- |
+  | Pure logic/model | Plain `TEST` or `testing::Test` |
+  | Windows, tabs, navigation or `AppServices` | `BrowserTestBase` |
+  | XML or registry persistence | `XmlStorageTest` / `RegistryStorageTest` |
+  | Async work | `ExecutorTestBase` and `RuntimeTestHelper` |
 
-```powershell
-& $msbuild Explorer++\Explorer++.sln /t:Explorer++ /p:Configuration=Debug /p:Platform=x64 /m
-```
+- `BrowserTestBase` wires real models with fakes for platform-dependent services. Use existing `*Fake`/`*Mock` types, `SimulatedFileSystem` and fake PIDLs instead of real paths where practical.
+- For storage fields, add non-default values to the relevant `*StorageTestHelper::BuildReference()`; round-trip tests compare saved and restored objects. Add migration tests for renamed or migrated fields.
+- Keep logic independently testable: depend on interfaces, isolate Win32 calls in views, and inject time through `PlatformContext::GetSystemClock()`.
+- Tests run on an STA thread with COM initialized. Registry tests must use `HKCU\\Software\\Explorer++Test`, never technician settings.
+- Test file naming, project entries and resource details are in `Explorer++\\TestExplorer++\\AGENTS.md`. Run only the relevant tests first; use the root `AGENTS.md` command.
 
-- The output is `Explorer++\Explorer++\x64\Debug\Explorer++.exe`.
-- Some checkouts have a local helper, `Scripts\build-debug.ps1`, that runs the same build, plus a VS Code **Explorer++ (Debug x64)** launch config (`.vscode\launch.json`) whose pre-launch task calls it. Use them if present; don't rely on them.
-- Solution configurations are `Debug`, `Debug-Asan`, `Debug-Clang`, `Release` and `Release-Clang`. Platforms are `Win32`, `x64` and `ARM64`.
-- The code is C++20 (`stdcpp20`) at warning level 4. Third-party headers have their warnings turned off.
+## CI
 
-## Build and run the unit tests
-
-`TestExplorer++` is **not** built in the solution's `Debug|x64` configuration, which has `ActiveCfg` but no `Build.0`. The `/t:TestExplorer++` solution target therefore fails with MSB4057. Build the project file directly instead, and pass `SolutionDir`:
-
-```powershell
-& $msbuild Explorer++\TestExplorer++\TestExplorer++.vcxproj /p:Configuration=Debug /p:Platform=x64 "/p:SolutionDir=$((Resolve-Path Explorer++).Path)\" /m
-.\Explorer++\TestExplorer++\x64\Debug\TestExplorer++.exe --gtest_brief=1
-.\Explorer++\TestExplorer++\x64\Debug\TestExplorer++.exe --gtest_filter=ConfigXmlStorageTest.*
-```
-
-- CI runs `.github\run_tests.ps1 -Configuration <cfg> -Platform <plat>`, which runs `TestExplorer++.exe` from `Explorer++\TestExplorer++\<Platform>\<Configuration>\`. `run_tests_with_coverage.ps1` collects Clang coverage.
-- The registry storage tests write to `HKCU\Software\Explorer++Test` and clean up afterwards.
-- `TestHelper` is a legacy project. Upstream documents it as "being removed" and not compiling. CI doesn't build or run it, so don't add tests there.
-
-## CI (`.github\workflows\build.yml`)
-
-- The matrix covers `Debug-Asan|x64`, `Release-Clang|x64`, `Release|Win32`, `Release|x64` and `Release|ARM64`.
-- Each job:
-  1. Bootstraps vcpkg, using a cached binary cache.
-  2. Builds the solution with MSBuild.
-  3. Runs `run_tests.ps1`.
-  4. Packages the artifacts with `package.ps1`, producing `explorerpp_<platform>.zip` and `.pdb` zips. There's no translations artifact any more.
-- `deploy.ps1` uploads the artifacts. It's upstream infrastructure and can usually be ignored for internal builds.
-
-## Validating a change
-
-1. Build the app (Debug x64).
-2. Build TestExplorer++ and run the tests that relate to the change, then the full suite. At the time of writing the baseline is 897 passing tests.
-3. For UI changes, launch the exe and check both light and dark themes (Tools > Options > Appearance > Theme).
-4. Make sure every new file is in both the `.vcxproj` and the `.vcxproj.filters` file.
+- `.github\\workflows\\build.yml` builds `Debug-Asan|x64`, `Release-Clang|x64`, and `Release` for `Win32`, `x64` and `ARM64`.
+- Jobs bootstrap vcpkg, use its binary cache, build, run `.github\\run_tests.ps1`, and package artifacts.
+- `.github\\workflows\\coverage.yml` runs the coverage configuration; `run_tests_with_coverage.ps1` collects Clang coverage.
+- `TestExplorer++` output is under `Explorer++\\TestExplorer++\\<Platform>\\<Configuration>\\`.
 
 ## Troubleshooting
 
-| Symptom | Fix |
+| Symptom | Likely fix |
 | --- | --- |
-| `vcpkg.props` not found | Initialise the submodule and bootstrap vcpkg |
-| `MSB4057: target "TestExplorer++" does not exist` | Build `TestExplorer++.vcxproj` directly (see above) |
-| RC compile errors such as garbled text or "unexpected end of file" | `Explorer++.rc` was saved in the wrong encoding. It must be UTF-16LE with a BOM. See `explorerplusplus-win32-ui` |
-| Unresolved external after adding a file | The file is missing from the `.vcxproj` |
-| Link errors about `vcpkg_installed` after changing `vcpkg.json` | Delete `vcpkg_installed\` and rebuild |
-| `cl`/`link` not found in a separate shell | Run vcvars and the build in the **same** `cmd /c` invocation |
+| `vcpkg.props` missing | Initialise the submodule and bootstrap vcpkg |
+| `MSB4057` for the test target | Build the test `.vcxproj` directly; see above |
+| Garbled resource-compiler text | Restore the `.rc` encoding; see `explorerplusplus-win32-ui` |
+| Unresolved external after adding a file | Add it to the relevant `.vcxproj` |
+| `cl`/`link` missing | Run vcvars and MSBuild in the same process |
+
+For build validation and expected behavior, follow "Done means" in root `AGENTS.md`.

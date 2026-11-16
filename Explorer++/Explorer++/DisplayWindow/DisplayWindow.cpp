@@ -31,6 +31,7 @@
 #include "ShellBrowser/ShellBrowser.h"
 #include "ShellBrowser/ShellBrowserEvents.h"
 #include "TabEvents.h"
+#include "../Helper/DpiCompatibility.h"
 #include "../Helper/WindowHelper.h"
 #include "../Helper/WindowSubclass.h"
 
@@ -44,6 +45,8 @@ next column. */
 
 #define MAIN_ICON_LEFT 20
 #define MAIN_ICON_TOP 20
+#define MAIN_ICON_SIZE 48
+#define ICON_TEXT_SPACING 12
 
 /* Defines the position of thumbnails
 for image files. The y-coordinate of
@@ -72,10 +75,9 @@ DisplayWindow::DisplayWindow(HWND parent, Mode mode, BrowserWindow *browser,
 	m_config(config),
 	m_acceleratorManager(appServices->GetAcceleratorManager()),
 	m_resourceLoader(appServices->GetResourceLoader()),
-	m_font(CreateFontIndirect(&m_config->displayWindowFont.get()))
+	m_dpi(DpiCompatibility::GetInstance().GetDpiForWindow(m_hwnd))
 {
-	m_LineSpacing = 20;
-	m_LeftIndent = 80;
+	OnFontConfigChanged();
 
 	m_bSizing = FALSE;
 	m_hbmThumbnail = nullptr;
@@ -100,7 +102,6 @@ DisplayWindow::DisplayWindow(HWND parent, Mode mode, BrowserWindow *browser,
 		std::bind(&DisplayWindow::InvalidateWindow, this)));
 
 	FAIL_FAST_IF_FAILED(SHGetImageList(SHIL_EXTRALARGE, IID_PPV_ARGS(&m_systemImageList)));
-	FAIL_FAST_IF_FAILED(m_systemImageList->GetIconSize(&m_folderIconWidth, &m_folderIconHeight));
 
 	if (m_mode == Mode::Normal)
 	{
@@ -163,6 +164,10 @@ LRESULT DisplayWindow::DisplayWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
 {
 	switch (msg)
 	{
+	case WM_DPICHANGED_AFTERPARENT:
+		OnDpiChanged();
+		break;
+
 	case WM_LBUTTONUP:
 		m_bSizing = FALSE;
 		ReleaseCapture();
@@ -272,6 +277,17 @@ HWND DisplayWindow::GetHWND() const
 	return m_hwnd;
 }
 
+int DisplayWindow::GetMinimumHeight() const
+{
+	auto dc = wil::GetDC(m_hwnd);
+	auto selectFont = wil::SelectObject(dc.get(), m_font.get());
+	TEXTMETRIC metrics;
+	CHECK(GetTextMetrics(dc.get(), &metrics));
+	int bottomPadding = MulDiv(TEXT_VERTICAL_THRESHOLD, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	auto iconRect = GetIconRect();
+	return std::max(iconRect.bottom, iconRect.top + metrics.tmHeight) + bottomPadding;
+}
+
 void DisplayWindow::InvalidateWindow()
 {
 	RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE);
@@ -279,8 +295,26 @@ void DisplayWindow::InvalidateWindow()
 
 void DisplayWindow::OnFontConfigChanged()
 {
-	m_font.reset(CreateFontIndirect(&m_config->displayWindowFont.get()));
+	auto font = m_config->displayWindowFont.get();
+	font.lfHeight = MulDiv(font.lfHeight, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	font.lfWidth = MulDiv(font.lfWidth, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	m_font.reset(CreateFontIndirect(&font));
+	CHECK(m_font);
 	InvalidateWindow();
+}
+
+void DisplayWindow::OnDpiChanged()
+{
+	m_dpi = DpiCompatibility::GetInstance().GetDpiForWindow(m_hwnd);
+	OnFontConfigChanged();
+}
+
+RECT DisplayWindow::GetIconRect() const
+{
+	int left = MulDiv(MAIN_ICON_LEFT, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	int top = MulDiv(MAIN_ICON_TOP, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	int size = MulDiv(MAIN_ICON_SIZE, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	return { left, top, left + size, top + size };
 }
 
 void DisplayWindow::Draw(HDC hdc, RECT *rc, RECT *updateRect)
@@ -291,7 +325,7 @@ void DisplayWindow::Draw(HDC hdc, RECT *rc, RECT *updateRect)
 
 	DrawBackground(hdcMem, rc);
 
-	PaintText(hdcMem, m_LeftIndent);
+	PaintText(hdcMem);
 
 	int folderIconIndex;
 
@@ -306,8 +340,11 @@ void DisplayWindow::Draw(HDC hdc, RECT *rc, RECT *updateRect)
 		folderIconIndex = m_iconFetcher->GetDefaultIconIndex(DefaultIconType::Folder);
 	}
 
-	auto res = ImageList_Draw(reinterpret_cast<HIMAGELIST>(m_systemImageList.get()),
-		folderIconIndex, hdcMem, MAIN_ICON_LEFT, MAIN_ICON_TOP, ILD_TRANSPARENT);
+	wil::unique_hicon icon;
+	FAIL_FAST_IF_FAILED(m_systemImageList->GetIcon(folderIconIndex, ILD_TRANSPARENT, &icon));
+	auto iconRect = GetIconRect();
+	auto res = DrawIconEx(hdcMem, iconRect.left, iconRect.top, icon.get(), GetRectWidth(&iconRect),
+		GetRectHeight(&iconRect), 0, nullptr, DI_NORMAL);
 	DCHECK(res);
 
 	if (m_bShowThumbnail)
@@ -524,63 +561,66 @@ void DisplayWindow::ExtractThumbnailImageInternal(ThumbnailEntry_t *pte)
 	}
 }
 
-void DisplayWindow::PaintText(HDC hdc, unsigned int x)
+std::vector<RECT> DisplayWindow::CalculateTextRects(HDC hdc)
 {
 	RECT rcClient;
-	RECT rcText;
-	int xCurrent;
-	int iTextBottom;
-	int iLine = 0;
-	int iCurrentColumnWidth = 0;
-	unsigned int i = 0;
+	GetClientRect(m_hwnd, &rcClient);
+	auto selectFont = wil::SelectObject(hdc, m_font.get());
+	int topPadding = MulDiv(MAIN_ICON_TOP, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	int bottomPadding = MulDiv(TEXT_VERTICAL_THRESHOLD, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	int columnSpacing = MulDiv(TEXT_COLUMN_SPACING, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	int xCurrent = GetIconRect().right + MulDiv(ICON_TEXT_SPACING, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	int yCurrent = topPadding;
+	int columnWidth = 0;
+	std::vector<RECT> textRects;
 
-	/* Needed to get character widths properly. */
-	HGDIOBJ hOriginalObject = SelectObject(hdc, m_font.get());
+	for (const auto &line : m_LineList)
+	{
+		SIZE stringSize;
+		auto res = GetTextExtentPoint32(hdc, line.szText, lstrlen(line.szText), &stringSize);
+		CHECK(res);
 
+		if (yCurrent > topPadding && yCurrent + stringSize.cy > rcClient.bottom - bottomPadding)
+		{
+			xCurrent += columnWidth + columnSpacing;
+			columnWidth = 0;
+			yCurrent = topPadding;
+		}
+
+		columnWidth = std::max(columnWidth, static_cast<int>(stringSize.cx));
+		textRects.push_back(
+			{ xCurrent, yCurrent, xCurrent + stringSize.cx, yCurrent + stringSize.cy });
+		yCurrent += stringSize.cy;
+	}
+
+	m_xColumnFinal = xCurrent + columnWidth + columnSpacing;
+	return textRects;
+}
+
+void DisplayWindow::PaintText(HDC hdc)
+{
+	auto textRects = CalculateTextRects(hdc);
+	auto selectFont = wil::SelectObject(hdc, m_font.get());
 	SetBkMode(hdc, TRANSPARENT);
 	SetTextColor(hdc, m_config->displayWindowTextColor.get());
 
-	GetClientRect(m_hwnd, &rcClient);
-	xCurrent = x;
-
-	/* TODO: Fix. */
-	for (i = 0; i < m_LineList.size(); i++)
+	RECT clientRect;
+	GetClientRect(m_hwnd, &clientRect);
+	for (size_t i = 0; i < textRects.size(); i++)
 	{
-		SIZE stringSize;
-
-		GetTextExtentPoint32(hdc, m_LineList.at(i).szText, lstrlen(m_LineList.at(i).szText),
-			&stringSize);
-
-		iTextBottom = (iLine * stringSize.cy) + m_LineSpacing + stringSize.cy;
-
-		if (abs(iTextBottom - rcClient.bottom) < TEXT_VERTICAL_THRESHOLD)
+		auto &textRect = textRects[i];
+		textRect.right = std::min(textRect.right, clientRect.right);
+		if (textRect.left < textRect.right)
 		{
-			xCurrent += iCurrentColumnWidth + TEXT_COLUMN_SPACING;
-			iCurrentColumnWidth = 0;
-			iLine = 0;
+			TransparentTextOut(hdc, m_LineList[i].szText, &textRect);
 		}
-
-		iCurrentColumnWidth = std::max(iCurrentColumnWidth, static_cast<int>(stringSize.cx));
-
-		rcText.left = xCurrent;
-		rcText.top = (iLine * stringSize.cy) + m_LineSpacing;
-		rcText.right = rcText.left + stringSize.cx;
-		rcText.bottom = rcText.top + stringSize.cy;
-		TransparentTextOut(hdc, m_LineList.at(i).szText, &rcText);
-
-		iLine++;
 	}
-
-	/* Needed for thumbnail image. */
-	xCurrent += iCurrentColumnWidth + TEXT_COLUMN_SPACING;
-	m_xColumnFinal = xCurrent;
-
-	SelectObject(hdc, hOriginalObject);
 }
 
 void DisplayWindow::TransparentTextOut(HDC hdc, TCHAR *text, RECT *prcText)
 {
-	DrawText(hdc, text, lstrlen(text), prcText, DT_LEFT | DT_NOPREFIX);
+	DrawText(hdc, text, lstrlen(text), prcText,
+		DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_END_ELLIPSIS);
 }
 
 LONG DisplayWindow::OnMouseMove(LPARAM lParam)
@@ -614,8 +654,9 @@ LONG DisplayWindow::OnMouseMove(LPARAM lParam)
 			0);
 	}
 
-	if ((m_config->displayWindowVertical.get() && cursorPos.x <= (rc.left + 5))
-		|| (!m_config->displayWindowVertical.get() && cursorPos.y <= (rc.top + 5)))
+	int resizeRange = MulDiv(5, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	if ((m_config->displayWindowVertical.get() && cursorPos.x <= (rc.left + resizeRange))
+		|| (!m_config->displayWindowVertical.get() && cursorPos.y <= (rc.top + resizeRange)))
 	{
 		SetCursor(
 			LoadCursor(NULL, m_config->displayWindowVertical.get() ? IDC_SIZEWE : IDC_SIZENS));
@@ -651,8 +692,9 @@ void DisplayWindow::OnLButtonDown(LPARAM lParam)
 
 	GetClientRect(m_hwnd, &rc);
 
-	if ((m_config->displayWindowVertical.get() && cursorPos.x <= (rc.left + 5))
-		|| (!m_config->displayWindowVertical.get() && cursorPos.y <= (rc.top + 5)))
+	int resizeRange = MulDiv(5, m_dpi, USER_DEFAULT_SCREEN_DPI);
+	if ((m_config->displayWindowVertical.get() && cursorPos.x <= (rc.left + resizeRange))
+		|| (!m_config->displayWindowVertical.get() && cursorPos.y <= (rc.top + resizeRange)))
 	{
 		SetCursor(
 			LoadCursor(NULL, m_config->displayWindowVertical.get() ? IDC_SIZEWE : IDC_SIZENS));
@@ -693,8 +735,7 @@ void DisplayWindow::OnShowContextMenu(const POINT &ptScreen)
 	auto res = ScreenToClient(m_hwnd, &ptClient);
 	CHECK(res);
 
-	RECT rc = { MAIN_ICON_LEFT, MAIN_ICON_TOP, MAIN_ICON_LEFT + m_folderIconWidth,
-		MAIN_ICON_TOP + m_folderIconHeight };
+	RECT rc = GetIconRect();
 
 	if (PtInRect(&rc, ptClient))
 	{

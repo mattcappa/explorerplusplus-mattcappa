@@ -29,6 +29,7 @@ struct Config;
 class FileActionHandler;
 class ShellBrowserImpl;
 class ShellTreeNode;
+class ShellIconImageList;
 
 class ShellTreeView : public ShellDropTargetWindow<HTREEITEM>, public BrowserCommandTarget
 {
@@ -53,6 +54,8 @@ public:
 	void ExecuteCommand(int command) override;
 
 private:
+	void UpdateIconImageList();
+
 	static const UINT WM_APP_ICON_RESULT_READY = WM_APP + 1;
 	static const UINT WM_APP_SUBFOLDERS_RESULT_READY = WM_APP + 2;
 
@@ -232,6 +235,7 @@ private:
 	// That means there's no need to manually set the tooltip font; only the treeview font needs to
 	// be set. Once the treeview font is set, the same font will be applied to the tooltip control.
 	MainFontSetter m_fontSetter;
+	std::unique_ptr<ShellIconImageList> m_iconImageList;
 
 	ctpl::thread_pool m_iconThreadPool;
 	std::unordered_map<int, std::future<std::optional<IconResult>>> m_iconResults;

@@ -32,6 +32,7 @@
 #include "ShellBrowser/NavigationEvents.h"
 #include "ShellBrowser/ShellBrowserImpl.h"
 #include "ShellBrowser/ShellNavigationController.h"
+#include "ShellIconImageList.h"
 #include "ShellItemContextMenu.h"
 #include "ShellTreeNode.h"
 #include "TabBar.h"
@@ -40,6 +41,7 @@
 #include "../Helper/ClipboardStore.h"
 #include "../Helper/ClipboardWatcher.h"
 #include "../Helper/Controls.h"
+#include "../Helper/DpiCompatibility.h"
 #include "../Helper/DragDropHelper.h"
 #include "../Helper/DriveInfo.h"
 #include "../Helper/FileActionHandler.h"
@@ -89,6 +91,7 @@ ShellTreeView::ShellTreeView(HWND parent, BrowserWindow *browser, AppServices *a
 
 	m_bShowHidden = TRUE;
 
+	UpdateIconImageList();
 	AddRootItems();
 
 	m_connections.push_back(m_browser->AddLifecycleStateChangedObserver(
@@ -161,6 +164,10 @@ LRESULT ShellTreeView::TreeViewProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 {
 	switch (msg)
 	{
+	case WM_DPICHANGED_AFTERPARENT:
+		UpdateIconImageList();
+		break;
+
 	case WM_SETFOCUS:
 		m_commandTarget.TargetFocused();
 		break;
@@ -195,6 +202,35 @@ LRESULT ShellTreeView::TreeViewProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 	}
 
 	return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
+
+void ShellTreeView::UpdateIconImageList()
+{
+	std::optional<ScopedRedrawDisabler> redrawDisabler;
+	if (IsWindowVisible(m_hTreeView))
+	{
+		redrawDisabler.emplace(m_hTreeView);
+	}
+	auto previousImageList = std::move(m_iconImageList);
+	m_iconImageList = std::make_unique<ShellIconImageList>(
+		DpiCompatibility::GetInstance().GetDpiForWindow(m_hTreeView));
+	TreeView_SetImageList(m_hTreeView, m_iconImageList->GetImageList(), TVSIL_NORMAL);
+
+	std::function<void(HTREEITEM)> resetImages = [&](HTREEITEM item)
+	{
+		for (; item; item = TreeView_GetNextSibling(m_hTreeView, item))
+		{
+			TVITEM details = {};
+			details.mask = TVIF_HANDLE | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_STATE;
+			details.hItem = item;
+			details.iImage = I_IMAGECALLBACK;
+			details.iSelectedImage = I_IMAGECALLBACK;
+			details.stateMask = TVIS_OVERLAYMASK;
+			CHECK(TreeView_SetItem(m_hTreeView, &details));
+			resetImages(TreeView_GetChild(m_hTreeView, item));
+		}
+	};
+	resetImages(TreeView_GetRoot(m_hTreeView));
 }
 
 LRESULT ShellTreeView::ParentWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -362,14 +398,13 @@ void ShellTreeView::OnGetDisplayInfo(NMTVDISPINFO *pnmtvdi)
 
 		if (cachedIconIndex)
 		{
-			ptvItem->iImage = *cachedIconIndex;
-			ptvItem->iSelectedImage = *cachedIconIndex;
+			ptvItem->iImage = m_iconImageList->GetIconIndex(*cachedIconIndex);
 		}
 		else
 		{
-			ptvItem->iImage = m_iFolderIcon;
-			ptvItem->iSelectedImage = m_iFolderIcon;
+			ptvItem->iImage = m_iconImageList->GetIconIndex(m_iFolderIcon);
 		}
+		ptvItem->iSelectedImage = ptvItem->iImage;
 
 		QueueIconTask(ptvItem->hItem);
 	}
@@ -483,10 +518,10 @@ void ShellTreeView::ProcessIconResult(int iconResultId)
 	TVITEM tvItem;
 	tvItem.mask = TVIF_HANDLE | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_STATE;
 	tvItem.hItem = result->treeItem;
-	tvItem.iImage = result->iconIndex;
-	tvItem.iSelectedImage = result->iconIndex;
+	tvItem.iImage = m_iconImageList->GetIconIndex(result->iconIndex, result->overlayIndex, true);
+	tvItem.iSelectedImage = tvItem.iImage;
 	tvItem.stateMask = TVIS_OVERLAYMASK;
-	tvItem.state = INDEXTOOVERLAYMASK(result->overlayIndex);
+	tvItem.state = 0;
 	TreeView_SetItem(m_hTreeView, &tvItem);
 }
 

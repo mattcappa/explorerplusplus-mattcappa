@@ -305,6 +305,7 @@
     <ClCompile Include="ColorRuleTest.cpp" />
     <ClCompile Include="ColorRuleXmlStorageTest.cpp" />
     <ClCompile Include="ColumnHelperTest.cpp" />
+    <ClCompile Include="ShellIconImageListTest.cpp" />
     <ClCompile Include="ColumnRegistryStorageTest.cpp" />
     <ClCompile Include="ColumnStorageTestHelper.cpp" />
     <ClCompile Include="ColumnStorageTest.cpp" />
@@ -327,6 +328,7 @@
     <ClCompile Include="ShellBackgroundContextMenuTest.cpp" />
     <ClCompile Include="TabContextMenuTest.cpp" />
     <ClCompile Include="TabViewTest.cpp" />
+    <ClCompile Include="DisplayWindowTest.cpp" />
     <ClCompile Include="TabViewTestApi.cpp" />
     <ClCompile Include="TaskbarTabManagerTest.cpp" />
     <ClCompile Include="TestMenuView.cpp" />

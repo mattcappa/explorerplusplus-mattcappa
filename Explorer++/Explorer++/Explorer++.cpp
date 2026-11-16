@@ -33,6 +33,7 @@
 #include "TabRestorer.h"
 #include "TabStorage.h"
 #include "WindowStorage.h"
+#include "../Helper/DpiCompatibility.h"
 #include "../Helper/MenuHelper.h"
 #include "../Helper/WindowHelper.h"
 #include "../Helper/WindowSubclass.h"
@@ -76,6 +77,7 @@ Explorerplusplus::Explorerplusplus(const WindowStorageData &storageData, AppServ
 	m_treeViewWidth = storageData.treeViewWidth;
 	m_displayWindowWidth = storageData.displayWindowWidth;
 	m_displayWindowHeight = storageData.displayWindowHeight;
+	m_layoutDpi = DpiCompatibility::GetInstance().GetDpiForWindow(m_hwnd);
 
 	SetUpLayoutConfigListeners();
 
@@ -109,6 +111,8 @@ void Explorerplusplus::SetUpLayoutConfigListeners()
 		m_config->showDisplayWindow.addObserver(std::bind(&Explorerplusplus::UpdateLayout, this)));
 	m_connections.push_back(m_config->displayWindowVertical.addObserver(
 		std::bind(&Explorerplusplus::UpdateLayout, this)));
+	m_connections.push_back(m_config->displayWindowFont.addObserver([this](const LOGFONT &)
+		{ ScheduleUpdateLayout(m_weakPtrFactory.GetWeakPtr(), m_appServices->GetRuntime()); }));
 }
 
 void Explorerplusplus::Initialize(const WindowStorageData &storageData)

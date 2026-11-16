@@ -39,6 +39,10 @@ LRESULT Explorerplusplus::WindowProcedure(HWND hwnd, UINT msg, WPARAM wParam, LP
 {
 	switch (msg)
 	{
+	case WM_DPICHANGED:
+		OnDpiChanged(HIWORD(wParam));
+		break;
+
 	case WM_ACTIVATE:
 		if (OnActivate(LOWORD(wParam), HIWORD(wParam)))
 		{

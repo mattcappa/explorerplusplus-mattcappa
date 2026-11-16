@@ -694,6 +694,9 @@
     <ClCompile Include="TabBarViewImageListManager.cpp">
       <Filter>Tabs\UI</Filter>
     </ClCompile>
+    <ClCompile Include="ShellIconImageList.cpp">
+      <Filter>ShellBrowser</Filter>
+    </ClCompile>
     <ClCompile Include="MenuView.cpp">
       <Filter>Menus\UI\Views</Filter>
     </ClCompile>
@@ -1751,6 +1754,9 @@
     </ClInclude>
     <ClInclude Include="TabBarViewImageListManager.h">
       <Filter>Tabs\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="ShellIconImageList.h">
+      <Filter>ShellBrowser</Filter>
     </ClInclude>
     <ClInclude Include="MouseEvent.h">
       <Filter>UI\Views</Filter>

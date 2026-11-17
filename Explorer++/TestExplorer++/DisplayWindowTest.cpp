@@ -46,7 +46,8 @@ protected:
 	LOGFONT GetFont() const
 	{
 		LOGFONT font;
-		EXPECT_EQ(GetObject(m_displayWindow->m_font.get(), sizeof(font), &font), sizeof(font));
+		constexpr int fontSize = sizeof(font);
+		EXPECT_EQ(GetObject(m_displayWindow->m_font.get(), fontSize, &font), fontSize);
 		return font;
 	}
 

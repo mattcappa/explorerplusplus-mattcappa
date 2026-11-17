@@ -30,8 +30,6 @@
 		#define EPP_BOOST_ARCH_AND_MODEL_OPT "x32"
 	#elif defined(BUILD_WIN64)
 		#define EPP_BOOST_ARCH_AND_MODEL_OPT "x64"
-	#elif defined(BUILD_ARM64)
-		#define EPP_BOOST_ARCH_AND_MODEL_OPT "a64"
 	#else
 		#error "Unknown target platform"
 	#endif

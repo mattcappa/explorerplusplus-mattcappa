@@ -9,10 +9,10 @@ Use the exact local build commands in the root `AGENTS.md`; this skill covers se
 
 ## Build setup
 
-- Use Visual Studio 2022 / Build Tools with **Desktop development with C++** and a Windows SDK.
+- Use stable Visual Studio 2026 18.12+ / Build Tools with MSVC 14.52+, **Desktop development with C++** and a Windows SDK.
 - Initialise and bootstrap the `Explorer++\\ThirdParty\\vcpkg` submodule if needed. Root MSBuild props import vcpkg; the first build installs manifest dependencies to `vcpkg_installed\\`.
 - Find MSBuild with `vswhere`; it is not necessarily on `PATH`. If using `vcvars`, run setup and build in the same `cmd /c` process.
-- Configurations: `Debug`, `Debug-Asan`, `Debug-Clang`, `Release`, `Release-Clang`; platforms: `Win32`, `x64`, `ARM64`.
+- Configurations: `Debug`, `Debug-Asan`, `Debug-Clang`, `Release`, `Release-Clang`; platforms: `Win32`, `x64`.
 - `Scripts\\build-debug.ps1` and the VS Code **Explorer++ (Debug x64)** launch configuration wrap the app build.
 - The test project has no `Build.0` for solution `Debug|x64`; build its `.vcxproj` directly and pass `SolutionDir` (command in `AGENTS.md`).
 
@@ -36,7 +36,7 @@ Use the exact local build commands in the root `AGENTS.md`; this skill covers se
 
 ## CI
 
-- `.github\\workflows\\build.yml` builds `Debug-Asan|x64`, `Release-Clang|x64`, and `Release` for `Win32`, `x64` and `ARM64`.
+- `.github\\workflows\\build.yml` builds `Debug-Asan|x64`, `Release-Clang|x64`, and `Release` for `Win32` and `x64`.
 - Jobs bootstrap vcpkg, use its binary cache, build, run `.github\\run_tests.ps1`, and package artifacts.
 - `.github\\workflows\\coverage.yml` runs the coverage configuration; `run_tests_with_coverage.ps1` collects Clang coverage.
 - `TestExplorer++` output is under `Explorer++\\TestExplorer++\\<Platform>\\<Configuration>\\`.

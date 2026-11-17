@@ -13,7 +13,7 @@ permissions:
 jobs:
   coverage:
     name: Generate coverage report
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
 
     strategy:
       matrix:
@@ -29,10 +29,14 @@ jobs:
           submodules: true
           fetch-depth: 0
 
+      - name: Ensure stable C++23 toolchain
+        run: ./.github/ensure-vs2026.ps1
+
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
         with:
           msbuild-architecture: ${{ matrix.msbuild-architecture }}
+          vs-version: '[18.12,19.0)'
 
       - name: Cache vcpkg binary packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

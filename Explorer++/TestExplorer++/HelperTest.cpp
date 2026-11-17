@@ -8,6 +8,15 @@
 
 using namespace testing;
 
+TEST(HelperTest, GetWindowsVersion)
+{
+	OSVERSIONINFOW version = {};
+	ASSERT_HRESULT_SUCCEEDED(GetWindowsVersion(version));
+	EXPECT_EQ(version.dwOSVersionInfoSize, sizeof(version));
+	EXPECT_GT(version.dwMajorVersion, 0u);
+	EXPECT_GT(version.dwBuildNumber, 0u);
+}
+
 TEST(BuildFileAttributesString, Empty)
 {
 	auto attributesString = BuildFileAttributesString(0);

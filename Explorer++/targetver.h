@@ -11,6 +11,11 @@
 
 #include <WinSDKVer.h>
 
-#define _WIN32_WINNT _WIN32_WINNT_WIN7
+#define _WIN32_WINNT _WIN32_WINNT_WIN10
+#define NTDDI_VERSION NTDDI_WIN10_NI
 
 #include <SDKDDKVer.h>
+
+#ifndef NTDDI_WIN10_NI
+#error A Windows SDK supporting Windows 11 version 22H2 or later is required.
+#endif

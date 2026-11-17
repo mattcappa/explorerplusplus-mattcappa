@@ -60,6 +60,7 @@ bool IsExtendedKey(UINT key);
 std::wstring CreateGUID();
 std::optional<std::wstring> GetLastErrorMessage(DWORD error);
 bool IsWindowsPE();
+HRESULT GetWindowsVersion(OSVERSIONINFOW &version);
 wil::unique_hmodule LoadSystemLibrary(const std::wstring &libraryName);
 
 std::optional<std::wstring> GetExpandedEnvironmentVariable(const std::wstring &name);

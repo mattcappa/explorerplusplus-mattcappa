@@ -9,10 +9,10 @@ $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer
 
 if (-not (Test-Path -LiteralPath $vswhere))
 {
-    throw 'Install Visual Studio 2022 or Build Tools for Visual Studio 2022 with the Desktop development with C++ workload and a Windows SDK, then press F5 again. See BUILDING.md.'
+    throw 'Install stable Visual Studio 2026 18.12 or later Build Tools with C++ x64 tools and a Windows SDK, then press F5 again. See BUILDING.md.'
 }
 
-$msbuild = & $vswhere -latest -products '*' -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find 'MSBuild\Current\Bin\MSBuild.exe'
+$msbuild = & $vswhere -latest -version '[18.12,)' -products '*' -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find 'MSBuild\Current\Bin\MSBuild.exe'
 
 if ($LASTEXITCODE -ne 0)
 {
@@ -21,7 +21,7 @@ if ($LASTEXITCODE -ne 0)
 
 if (-not $msbuild)
 {
-    throw 'No Visual Studio installation with MSBuild and the C++ x64 build tools was found. Install the Desktop development with C++ workload and a Windows SDK. See BUILDING.md.'
+    throw 'No complete stable Visual Studio 2026 18.12 or later installation with MSBuild and C++ x64 tools was found. See BUILDING.md.'
 }
 
 $vcpkgRoot = Join-Path $repositoryRoot 'Explorer++\ThirdParty\vcpkg'

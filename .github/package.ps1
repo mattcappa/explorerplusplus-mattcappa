@@ -27,7 +27,6 @@ function New-Artifact {
 $architecture = switch ($Platform) {
     'Win32' { 'x86' }
     'x64' { 'x64' }
-    'ARM64' { 'arm64' }
     default { throw "Unsupported platform: $Platform" }
 }
 
@@ -48,8 +47,6 @@ New-Artifact `
     -Name "explorerpp_${architecture}_symbols.zip" `
     -Files "$repositoryRoot\Explorer++\Explorer++\$Platform\$Configuration\Explorer++.pdb"
 
-if ($Platform -ne 'ARM64') {
-    Copy-Item `
-        "Explorer++\Installer\bin\$architecture\$Configuration\explorerpp_${architecture}_setup.msi" `
-        $artifactsDirectory
-}
+Copy-Item `
+    "Explorer++\Installer\bin\$architecture\$Configuration\explorerpp_${architecture}_setup.msi" `
+    $artifactsDirectory

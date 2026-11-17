@@ -40,8 +40,6 @@ private:
 		Max
 	};
 
-	using RtlGetVersionType = NTSTATUS(WINAPI *)(LPOSVERSIONINFOEXW);
-
 	// Windows 10 1809
 	using AllowDarkModeForAppType = bool(WINAPI *)(bool allow);
 	using FlushMenuThemesType = void(WINAPI *)();

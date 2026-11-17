@@ -15,17 +15,13 @@
 DarkModeManagerImpl::DarkModeManagerImpl(EventWindow *eventWindow, const Config *config) :
 	m_config(config)
 {
-	auto RtlGetVersion = std::bit_cast<RtlGetVersionType>(
-		GetProcAddress(GetModuleHandle(L"ntdll.dll"), "RtlGetVersion"));
-
-	if (!RtlGetVersion)
+	OSVERSIONINFOW osVersionInfo;
+	HRESULT hr = GetWindowsVersion(osVersionInfo);
+	if (FAILED(hr))
 	{
+		LOG(ERROR) << "Failed to query the Windows version for dark mode: " << hr;
 		return;
 	}
-
-	OSVERSIONINFOEX osVersionInfo;
-	osVersionInfo.dwOSVersionInfoSize = sizeof(osVersionInfo);
-	RtlGetVersion(&osVersionInfo);
 
 	if (osVersionInfo.dwMajorVersion != 10 || osVersionInfo.dwMinorVersion != 0
 		|| osVersionInfo.dwBuildNumber < BUILD_NUMBER_1809)

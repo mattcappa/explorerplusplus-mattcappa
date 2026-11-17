@@ -171,6 +171,9 @@
     <ClCompile Include="VersionHelperTest.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="SystemRequirementsTest.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="AcceleratorHelperTest.cpp">
       <Filter>Core\Accelerators</Filter>
     </ClCompile>

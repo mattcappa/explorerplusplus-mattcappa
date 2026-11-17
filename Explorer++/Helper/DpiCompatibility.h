@@ -4,17 +4,8 @@
 
 #pragma once
 
-#include "WinUserBackwardsCompatibility.h"
 #include <wil/resource.h>
-
-// Both of these messages are available on Windows 10 and later and the Windows headers are set up
-// so that the values are only defined when the appropriate minimum version is set. Defining the
-// messages here allows the application to respond to them. If the minimum version is increased to
-// at least _WIN32_WINNT_WIN10, there's no need to manually define these values and the declarations
-// can be removed.
-static_assert(WINVER < _WIN32_WINNT_WIN10);
-#define WM_DPICHANGED_BEFOREPARENT 0x02E2
-#define WM_DPICHANGED_AFTERPARENT 0x02E3
+#include <windows.h>
 
 class DpiCompatibility
 {

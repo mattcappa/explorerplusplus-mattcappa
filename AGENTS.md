@@ -4,7 +4,7 @@ This is an internal fork of [Explorer++](https://github.com/derceg/explorerplusp
 
 ## Product rules
 - **English only.** Don't reintroduce translation DLLs, the `Language` option or `--language` switch, `LAYOUT_RTL` handling, or per-language resources. OS-driven formatting of dates, numbers and sizes stays.
-- **Windows 11 is the eventual target.** Keep compatibility code for older Windows unless asked to remove it. New code may use Windows 10+ APIs only where the project already does.
+- **Windows 11 22H2+ is required.** The minimum Windows build is 22621. Keep unrelated legacy compatibility helpers unless asked to remove them.
 - Upstream conventions in [CONTRIBUTING.md](CONTRIBUTING.md) apply.
 
 ## Stay on track
@@ -16,11 +16,12 @@ This is an internal fork of [Explorer++](https://github.com/derceg/explorerplusp
 - Never search or read `vcpkg_installed/`, `**/x64/`, `Explorer++/ThirdParty/`, `.vs/`, or `*.vcxproj.filters` (except to add an entry).
 - Grep first, then `view` with a line range. These files are huge: `Explorer++.rc` (~180 KB), `Explorer++.vcxproj` (~130 KB), `resource.h` (~50 KB), `ListView.cpp`, `ShellTreeView.cpp` and `ShellBrowserImpl.cpp`.
 - Keep build output quiet with `-v:m -clp:ErrorsOnly`. Run only the relevant tests with `--gtest_filter=`, then the full suite once with `--gtest_brief=1`.
+- For background work, continue only with independent tasks; if none remain, yield without polling or status updates and resume on completion notification. Retrieve results once. For synchronous waits, use one suitable timeout instead of repeated short waits.
 - Load a skill only when the task matches it (see below).
 
 ## Build and test (Debug x64)
 ```powershell
-$msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\Current\Bin\MSBuild.exe'
+$msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -version '[18.12,)' -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find 'MSBuild\Current\Bin\MSBuild.exe'
 & $msbuild Explorer++\Explorer++.sln /t:Explorer++ /p:Configuration=Debug /p:Platform=x64 /m -v:m -clp:ErrorsOnly
 # TestExplorer++ isn't in the Debug|x64 solution build; build the project directly.
 & $msbuild Explorer++\TestExplorer++\TestExplorer++.vcxproj /p:Configuration=Debug /p:Platform=x64 "/p:SolutionDir=$((Resolve-Path Explorer++).Path)\" /m -v:m -clp:ErrorsOnly

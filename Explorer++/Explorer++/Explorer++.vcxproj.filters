@@ -475,6 +475,9 @@
     <ClCompile Include="VersionHelper.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="SystemRequirements.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="Version.cpp">
       <Filter>Core</Filter>
     </ClCompile>
@@ -1495,6 +1498,9 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="VersionHelper.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SystemRequirements.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Version.h">

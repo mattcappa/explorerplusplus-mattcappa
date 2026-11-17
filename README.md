@@ -5,6 +5,8 @@
 
 Explorer++ is a lightweight and fast file manager for Windows.
 
+This internal build requires Windows 11 version 22H2 (build 22621) or later.
+
 ## Features
 
 * With the option to save to the registry or a configuration file, Explorer++ is __completely portable__
@@ -30,10 +32,6 @@ Explorer++ is a lightweight and fast file manager for Windows.
 ### 64-bit
 
 [explorerpp_x64.zip](https://download.explorerplusplus.com/dev/latest/explorerpp_x64.zip)
-
-### ARM64
-
-[explorerpp_arm64.zip](https://download.explorerplusplus.com/dev/latest/explorerpp_arm64.zip)
 
 For a full list of builds, see https://explorerplusplus.com/builds.
 

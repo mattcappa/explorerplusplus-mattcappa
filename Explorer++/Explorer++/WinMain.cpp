@@ -4,9 +4,15 @@
 
 #include "stdafx.h"
 #include "App.h"
+#include "AppInfo.h"
 #include "CommandLine.h"
 #include "CrashHandlerHelper.h"
+#include "ExitCode.h"
+#include "MainResource.h"
+#include "ResourceHelper.h"
 #include "StartupCommandLineProcessor.h"
+#include "SystemRequirements.h"
+#include "../Helper/Helper.h"
 #include "../Helper/SystemClipboardStore.h"
 #include <boost/locale.hpp>
 #include <wil/result.h>
@@ -45,6 +51,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// for almost the entire lifetime of the application (the only exception being the above block).
 	auto glogCleanup = InitializeLogging();
 	InitializeCrashHandler();
+
+	HRESULT hr = SystemRequirements::CheckWindowsVersion(GetWindowsVersion);
+	if (FAILED(hr))
+	{
+		LOG(ERROR) << "Windows version requirement check failed: " << hr;
+		auto message = ResourceHelper::LoadString(GetModuleHandle(nullptr),
+			hr == HRESULT_FROM_WIN32(ERROR_OLD_WIN_VERSION) ? IDS_UNSUPPORTED_WINDOWS_VERSION
+															: IDS_WINDOWS_VERSION_QUERY_FAILED);
+		MessageBox(nullptr, message.c_str(), AppInfo::NAME, MB_OK | MB_ICONERROR);
+		return EXIT_CODE_ERROR;
+	}
+
 	InitializeLocale();
 
 	auto commandLineInfo = CommandLine::Parse(GetCommandLine());

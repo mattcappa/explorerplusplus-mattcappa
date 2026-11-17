@@ -18,6 +18,7 @@
 #include <comutil.h>
 #include <sddl.h>
 #include <wmsdk.h>
+#include <bit>
 
 // Required for CLSID_WbemLocator.
 #pragma comment(lib, "wbemuuid.lib")
@@ -29,8 +30,8 @@ enum class VersionSubBlockType
 };
 
 BOOL GetFileVersionValue(const TCHAR *szFullFileName, VersionSubBlockType subBlockType,
-	DWORD *pdwProductVersionLS, DWORD *pdwProductVersionMS,
-	const TCHAR *szVersionInfo, TCHAR *szVersionBuffer, UINT cchMax);
+	DWORD *pdwProductVersionLS, DWORD *pdwProductVersionMS, const TCHAR *szVersionInfo,
+	TCHAR *szVersionBuffer, UINT cchMax);
 BOOL GetStringTableValue(void *pBlock, LangAndCodePage *plcp, UINT nItems,
 	const TCHAR *szVersionInfo, TCHAR *szVersionBuffer, UINT cchMax);
 
@@ -409,20 +410,20 @@ BOOL IsImage(const TCHAR *szFileName)
 BOOL GetFileProductVersion(const TCHAR *szFullFileName, DWORD *pdwProductVersionLS,
 	DWORD *pdwProductVersionMS)
 {
-	return GetFileVersionValue(szFullFileName, VersionSubBlockType::Root,
-		pdwProductVersionLS, pdwProductVersionMS, nullptr, nullptr, 0);
+	return GetFileVersionValue(szFullFileName, VersionSubBlockType::Root, pdwProductVersionLS,
+		pdwProductVersionMS, nullptr, nullptr, 0);
 }
 
 BOOL GetVersionInfoString(const TCHAR *szFullFileName, const TCHAR *szVersionInfo,
 	TCHAR *szVersionBuffer, UINT cchMax)
 {
-	return GetFileVersionValue(szFullFileName, VersionSubBlockType::StringTableValue,
-		nullptr, nullptr, szVersionInfo, szVersionBuffer, cchMax);
+	return GetFileVersionValue(szFullFileName, VersionSubBlockType::StringTableValue, nullptr,
+		nullptr, szVersionInfo, szVersionBuffer, cchMax);
 }
 
 BOOL GetFileVersionValue(const TCHAR *szFullFileName, VersionSubBlockType subBlockType,
-	DWORD *pdwProductVersionLS, DWORD *pdwProductVersionMS,
-	const TCHAR *szVersionInfo, TCHAR *szVersionBuffer, UINT cchMax)
+	DWORD *pdwProductVersionLS, DWORD *pdwProductVersionMS, const TCHAR *szVersionInfo,
+	TCHAR *szVersionBuffer, UINT cchMax)
 {
 	BOOL bSuccess = FALSE;
 	DWORD dwLen = GetFileVersionInfoSize(szFullFileName, nullptr);
@@ -743,6 +744,24 @@ bool IsWindowsPE()
 	LSTATUS result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"System\\ControlSet001\\Control\\MiniNT", 0,
 		KEY_READ, &key);
 	return result == ERROR_SUCCESS;
+}
+
+HRESULT GetWindowsVersion(OSVERSIONINFOW &version)
+{
+	using RtlGetVersionType = LONG(WINAPI *)(OSVERSIONINFOW *);
+
+	auto module = GetModuleHandleW(L"ntdll.dll");
+	RETURN_LAST_ERROR_IF_NULL(module);
+
+	auto query = std::bit_cast<RtlGetVersionType>(GetProcAddress(module, "RtlGetVersion"));
+	RETURN_LAST_ERROR_IF_NULL(query);
+
+	OSVERSIONINFOW result = {};
+	result.dwOSVersionInfoSize = sizeof(result);
+	RETURN_IF_FAILED(HRESULT_FROM_NT(query(&result)));
+
+	version = result;
+	return S_OK;
 }
 
 wil::unique_hmodule LoadSystemLibrary(const std::wstring &libraryName)

@@ -3,12 +3,19 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
+  <Target Name="CheckCpp23Toolchain" BeforeTargets="PrepareForBuild">
+    <Error Condition="$([MSBuild]::VersionLessThan('$(MSBuildVersion)', '18.12'))"
+      Text="Explorer++ requires stable MSBuild 18.12 or later for C++23. See BUILDING.md." />
+    <Error Condition="'$(VCToolsVersion)' == ''"
+      Text="Explorer++ requires MSVC 14.52 or later C++ build tools. See BUILDING.md." />
+    <Error Condition="'$(VCToolsVersion)' != '' And $([MSBuild]::VersionLessThan('$(VCToolsVersion)', '14.52'))"
+      Text="Explorer++ requires MSVC 14.52 or later C++ build tools. See BUILDING.md." />
+  </Target>
   <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>PLATFORM_TOOLSET_VERSION=$(PlatformToolsetVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">BUILD_WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">BUILD_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Platform)'=='ARM64'">BUILD_ARM64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions Condition="'$(PlatformToolset)' != 'ClangCL'">/w44062 /w15038 /utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>

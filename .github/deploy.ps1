@@ -77,9 +77,6 @@ $artifactsToDeploy = @(
     'Explorer++.Release.x64/explorerpp_x64.zip'
     'Explorer++.Release.x64/explorerpp_x64_setup.msi'
     'Explorer++.Release.x64/explorerpp_x64_symbols.zip'
-
-    'Explorer++.Release.ARM64/explorerpp_arm64.zip'
-    'Explorer++.Release.ARM64/explorerpp_arm64_symbols.zip'
 )
 
 $artifactsToDeploy = $artifactsToDeploy | ForEach-Object {

@@ -24,7 +24,6 @@ function Initialize-DeveloperEnvironment {
     $architecture = switch ($Platform) {
         'Win32' { 'x86' }
         'x64' { 'x64' }
-        'ARM64' { 'arm64' }
         default { throw "Unsupported platform: $Platform" }
     }
 

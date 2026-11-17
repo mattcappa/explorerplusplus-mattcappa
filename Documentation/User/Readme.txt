@@ -12,8 +12,9 @@ www.explorerplusplus.com
 About Explorer++
 ----------------
 Explorer++ is a free multi-tab file manager for Windows.
-Available on Windows XP and above, it features the
-same familiar interface as Windows Explorer, while
+This internal build requires Windows 11 version 22H2
+(build 22621) or later. It features the same familiar
+interface as Windows Explorer, while
 introducing several enhancements and improvements for a
 much richer file browsing experience.
 
